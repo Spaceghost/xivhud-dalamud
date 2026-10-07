@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- These tests exercise only allocated structs and managed vector operations, never a native call. -->
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+    <DalamudLibPath Condition="'$(DalamudLibPath)' == '' and '$(DALAMUD_HOME)' != ''">$(DALAMUD_HOME)</DalamudLibPath>
+    <DalamudLibPath Condition="'$(DalamudLibPath)' == ''">$(APPDATA)/XIVLauncher/addon/Hooks/dev</DalamudLibPath>
+    <IsTestProject>true</IsTestProject><IsPackable>false</IsPackable><OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+    <PackageReference Include="xunit.v3.mtp-off" Version="4.0.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0" />
+    <Reference Include="Dalamud.Bindings.ImGui"><HintPath>$(DalamudLibPath)/Dalamud.Bindings.ImGui.dll</HintPath></Reference>
+    <Compile Include="../../src/XivHud.Windowing.Dalamud/NativeWindowCapture.cs" Link="NativeWindowCapture.cs" />
+    <Compile Include="../../src/XivHud.Windowing.Dalamud/NativeWindowFocus.cs" Link="NativeWindowFocus.cs" />
+    <Compile Include="../../src/XivHud.Windowing.Dalamud/NativeWindowShutdown.cs" Link="NativeWindowShutdown.cs" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

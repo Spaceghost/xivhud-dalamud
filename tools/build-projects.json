@@ -1,0 +1,52 @@
+{
+  "repo": "Spaceghost/xivhud-dalamud",
+  "plugins": [
+    "xivhud-dalamud/src/XivHud.Plugin/XivHud.Plugin.csproj",
+    "xivhud-journal/src/XivHud.Journal/XivHud.Journal.csproj",
+    "xivhud-character/src/XivHud.Character/XivHud.Character.csproj"
+  ],
+  "packages": [
+    {
+      "project": "XivHud.Plugin",
+      "manifest": "xivhud-dalamud/src/XivHud.Plugin/XivHud.json",
+      "installer": true,
+      "icon": "https://spacegho.st/mods/ffxiv/plugins/icons/xivhud.png",
+      "required": [
+        "XivHud.Core.dll",
+        "XivHud.Protocol.dll"
+      ]
+    },
+    {
+      "project": "XivHud.Journal",
+      "manifest": "xivhud-journal/src/XivHud.Journal/XivHud.Journal.json",
+      "installer": true,
+      "icon": "https://spacegho.st/mods/ffxiv/plugins/icons/xivhud-journal.png",
+      "required": [
+        "XivHud.Windowing.dll",
+        "XivHud.Windowing.Dalamud.dll",
+        "XivHud.Protocol.dll",
+        "KamiToolKit.dll"
+      ]
+    },
+    {
+      "project": "XivHud.Character",
+      "manifest": "xivhud-character/src/XivHud.Character/XivHud.Character.json",
+      "installer": false,
+      "icon": "https://spacegho.st/mods/ffxiv/plugins/icons/xivhud-character.png",
+      "required": [
+        "XivHud.Windowing.dll",
+        "XivHud.Windowing.Dalamud.dll",
+        "XivHud.Protocol.dll",
+        "KamiToolKit.dll"
+      ]
+    }
+  ],
+  "tests": [
+    "xivhud-character/tests/XivHud.Character.Tests/XivHud.Character.Tests.csproj",
+    "xivhud-dalamud/tests/XivHud.Core.Tests/XivHud.Core.Tests.csproj",
+    "xivhud-journal/tests/XivHud.Journal.Tests/XivHud.Journal.Tests.csproj",
+    "xivhud-windowing/tests/XivHud.Protocol.Tests/XivHud.Protocol.Tests.csproj",
+    "xivhud-windowing/tests/XivHud.Windowing.Tests/XivHud.Windowing.Tests.csproj",
+    "xivhud-windowing/tests/XivHud.NativeWindowing.Tests/XivHud.NativeWindowing.Tests.csproj"
+  ]
+}

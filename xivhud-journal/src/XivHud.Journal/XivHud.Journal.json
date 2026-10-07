@@ -1,0 +1,21 @@
+{
+  "Author": "Johnneylee Jack Rollins",
+  "Name": "XivHud \u00b7 Journal",
+  "InternalName": "XivHud.Journal",
+  "AssemblyVersion": "0.1.0.1",
+  "Punchline": "An adventurer's journal for an Umbra-centered Eorzea.",
+  "Description": "A richly detailed quest journal with live accepted quests, search, personal bookmarks and an accessible parchment reading page. Open from Umbra or /xivjournal. The original journal remains available for all native quest actions.",
+  "ApplicableVersion": "any",
+  "DalamudApiLevel": 15,
+  "Tags": [
+    "journal",
+    "quests",
+    "umbra",
+    "interface"
+  ],
+  "LoadRequiredState": 0,
+  "LoadSync": false,
+  "LoadPriority": 0,
+  "CanUnloadAsync": true,
+  "RepoUrl": "https://github.com/Spaceghost/xivhud-dalamud"
+}

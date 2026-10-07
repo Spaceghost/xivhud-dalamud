@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><IsTestProject>true</IsTestProject><IsPackable>false</IsPackable><OutputType>Exe</OutputType></PropertyGroup>
+ <ItemGroup>
+  <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+  <PackageReference Include="xunit.v3.mtp-off" Version="4.0.1" />
+  <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0" />
+  <Compile Include="../../src/XivHud.Character/CharacterMath.cs" Link="CharacterMath.cs" />
+  <Compile Include="../../src/XivHud.Character/CharacterControllerInput.cs" Link="CharacterControllerInput.cs" />
+  <Compile Include="../../src/XivHud.Character/CharacterControllerIntent.cs" Link="CharacterControllerIntent.cs" />
+  <Compile Include="../../src/XivHud.Character/CharacterPopupLayout.cs" Link="CharacterPopupLayout.cs" />
+  <Using Include="Xunit" />
+ </ItemGroup>
+</Project>

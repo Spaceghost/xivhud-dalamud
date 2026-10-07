@@ -1,0 +1,20 @@
+{
+  "Author": "Johnneylee Jack Rollins",
+  "Name": "XivHud",
+  "InternalName": "XivHud",
+  "AssemblyVersion": "0.1.0.1",
+  "Punchline": "Keep Umbra and the world in view.",
+  "Description": "A reversible native HUD mode for an Umbra-centered interface. Hides native HUD, nameplates, chat and action bars without rewriting your saved HUD layout. Use the HUD entry in Umbra's server-info widget or /xivhud off to restore. World-space UI is provided by the existing guide, rug and panel plugins.",
+  "ApplicableVersion": "any",
+  "DalamudApiLevel": 15,
+  "Tags": [
+    "hud",
+    "umbra",
+    "interface"
+  ],
+  "LoadRequiredState": 0,
+  "LoadSync": false,
+  "LoadPriority": 0,
+  "CanUnloadAsync": false,
+  "RepoUrl": "https://github.com/Spaceghost/xivhud-dalamud"
+}

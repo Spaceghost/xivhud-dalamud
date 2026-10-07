@@ -1,0 +1,13 @@
+<Project Sdk="Dalamud.NET.Sdk/15.0.0">
+  <PropertyGroup>
+    <AssemblyName>XivHud.Journal</AssemblyName>
+    <RootNamespace>XivHud.Journal</RootNamespace>
+    <Version>0.1.0.1</Version>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../xivhud-windowing/src/XivHud.Windowing.Dalamud/XivHud.Windowing.Dalamud.csproj" />
+    <ProjectReference Include="../../../xivhud-windowing/src/XivHud.Windowing/XivHud.Windowing.csproj" />
+  </ItemGroup>
+  <ItemGroup><ProjectReference Include="../../../xivhud-windowing/src/XivHud.Protocol/XivHud.Protocol.csproj" /></ItemGroup>
+</Project>
