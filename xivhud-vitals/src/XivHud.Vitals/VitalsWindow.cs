@@ -138,7 +138,7 @@ internal sealed class VitalsWindow : IDisposable
                 Right(d, p + new Vector2(size.X - 20 * s, 101 * s), resource.Display, 12 * s, Ivory);
                 Meter(d, p + new Vector2(20, 118) * s, new(width, 5 * s), resource, C(141, 164, 214), s);
             }
-            var castY = kind == PanelKind.Player ? 131 : 107;
+            var castY = kind == PanelKind.Player ? 130 : 107;
             if (actor.Cast is { } cast && cast.Remaining(age) > 0)
             {
                 var tint = cast.Interruptible ? C(244, 189, 118) : PaleGold;
