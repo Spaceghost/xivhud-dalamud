@@ -81,7 +81,9 @@ internal sealed class VitalsWindow : IDisposable
         var viewport = ImGui.GetMainViewport();
         var global = ImGuiHelpers.GlobalScale;
         if (!float.IsFinite(global) || global <= 0) global = 1;
-        var rect = PanelLayout.Fit(kind, count, viewport.WorkPos, viewport.WorkSize, config.Anchor(kind), config.Scale * global);
+        var rect = config.AutoArrange
+            ? HudArrangement.Fit(kind, count, viewport.WorkPos, viewport.WorkSize, config.Scale * global)
+            : PanelLayout.Fit(kind, count, viewport.WorkPos, viewport.WorkSize, config.Anchor(kind), config.Scale * global);
         if (rect.Scale <= 0) return;
         ImGui.SetNextWindowPos(rect.Position);
         ImGui.SetNextWindowSize(rect.Size);
@@ -109,11 +111,11 @@ internal sealed class VitalsWindow : IDisposable
                 Compass(d, p + new Vector2(27, 24) * s, 8 * s, config.DarkPaper ? PaleGold : C(111, 83, 43));
                 var textColor = config.DarkPaper ? Ivory : Ink;
                 Text(d, p + new Vector2(43, 15) * s, title, 13 * s, textColor, small, size.X - 146 * s);
-                Right(d, p + new Vector2(size.X - 20 * s, 16 * s), Preview ? "SAMPLE" : !config.Locked ? "MOVE" : "", 11 * s, textColor);
+                Right(d, p + new Vector2(size.X - 20 * s, 16 * s), Preview ? "SAMPLE" : config.AutoArrange ? "AUTO" : !config.Locked ? "MOVE" : "", 11 * s, textColor);
                 d.PushClipRect(p + new Vector2(12 * s, 39 * s), p + size - new Vector2(12 * s), true);
                 try { draw(d, p, size, s); }
                 finally { d.PopClipRect(); }
-                if (!config.Locked)
+                if (!config.Locked && !config.AutoArrange)
                 {
                     d.AddRect(p + new Vector2(3 * s), p + size - new Vector2(3 * s), Aether, 8 * s);
                     ImGui.SetCursorScreenPos(p);
@@ -301,7 +303,10 @@ internal sealed class VitalsWindow : IDisposable
             if (ImGui.Checkbox("Show live Vitals HUD", ref enabled)) { config.Enabled = enabled; Preview = false; save(); }
             var locked = config.Locked;
             if (ImGui.Checkbox("Lock panels (click through)", ref locked)) { config.Locked = locked; save(); }
-            ImGui.TextWrapped(config.Locked ? "Mouse, keyboard and controller remain with the game." : "Drag any panel to move it. Target and party placeholders appear while editing.");
+            ImGui.TextWrapped(config.Locked ? "Mouse, keyboard and controller remain with the game." : config.AutoArrange ? "Automatic placement follows your display size. Choose manual placement to drag." : "Drag any panel to move it. Target and party placeholders appear while editing.");
+            var autoArrange = config.AutoArrange;
+            if (ImGui.Checkbox("Arrange panels around a clear centre", ref autoArrange)) { config.AutoArrange = autoArrange; save(); }
+            ImGui.TextWrapped("Automatic placement fits all six Vitals panels as a group when resolution or UI scale changes. Your manual positions are retained. Journal's tracker has its own position.");
             var scale = config.Scale;
             if (ImGui.SliderFloat("Panel size", ref scale, .65f, 2, "%.2f")) { config.Scale = scale; layoutDirty = true; }
             var dark = config.DarkPaper;

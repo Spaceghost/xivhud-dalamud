@@ -69,3 +69,9 @@ Check empty versus unavailable data and finite versus permanent/unknown timers.
 Confirm disabled ribbons skip status reads; no missing icon prevents textual HUD
 rendering. Exercise locked input pass-through, drag, resolution changes, logout,
 zoning and cutscenes. Measure representative frame cost before performance claims.
+
+Automatic placement adds group geometry tests for 720p/1080p/4K, ultrawide,
+portrait, small viewports, negative monitor origins, large global scale and full
+party size. Validate actual font readability at those sizes and that switching
+back to manual restores saved anchors. Journal/native windows are outside this
+arrangement's scope. This is offline geometry evidence, not a screenshot check.

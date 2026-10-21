@@ -115,3 +115,17 @@ and capacity without exporting effect or actor data. Existing `execute_command`
 can invoke the documented `/xivvitals effects` commands; window controls remain
 capability checked. Live status accuracy, icons, physical input and performance
 acceptance are pending.
+
+## Automatic placement
+
+`/xivvitals arrange` fits all six Vitals panels around a clear centre. It adapts
+when the viewport or global UI scale changes and reserves the full eight-member
+party height. This makes a change between 720p, 1080p and 4K predictable; smaller
+viewports reduce the group scale. Panel visibility remains your choice.
+
+Appearance has the same switch. `/xivvitals manual` restores your saved manual
+positions; automatic placement never overwrites them. Turn automatic placement
+off to drag individual panels. Reset returns to the original manual defaults.
+This arranges Vitals only: Journal, Character, the native HUD and other plugins
+retain their own layouts. Geometry tests verify no overlap and a clear centre;
+actual in-game readability and performance still need live acceptance.

@@ -46,7 +46,7 @@ public sealed class Plugin : IDalamudPlugin
             call = pi.GetIpcProvider<string, string>("XivHud.Vitals.v1.Call");
             call.RegisterFunc(ipc.Call);
             commandRegistered = commands.AddHandler(Command, new CommandInfo(OnCommand)
-            { HelpMessage = "Illustrated Vitals HUD. Options: open, close, settings, preview, lock, unlock, reset, effects [on/off/mine/all], status. Native HUD visibility is unchanged." });
+            { HelpMessage = "Illustrated Vitals HUD. Options: open, close, settings, preview, lock, unlock, reset, arrange, manual, effects [on/off/mine/all], status. Native HUD visibility is unchanged." });
             if (!commandRegistered) throw new InvalidOperationException("/xivvitals is already registered.");
             toolbar = dtr.Get("XivHud.Vitals");
             toolbar.Text = "Vitals"; toolbar.Tooltip = "Vitals HUD\nClick for appearance and layout. Right-click to show/hide the live HUD.";
@@ -80,6 +80,8 @@ public sealed class Plugin : IDalamudPlugin
             case "lock": config.Locked = true; Save(); break;
             case "unlock": config.Locked = false; window.SettingsOpen = true; Save(); break;
             case "reset": config.ResetLayout(); window.SettingsOpen = true; Save(); break;
+            case "arrange": config.AutoArrange = true; Save(); break;
+            case "manual": config.AutoArrange = false; Save(); break;
             case "effects": case "effects on": config.ShowPlayerEffects = true; config.ShowTargetEffects = true; Save(); break;
             case "effects off": config.ShowPlayerEffects = false; config.ShowTargetEffects = false; Save(); break;
             case "effects mine": config.TargetEffectsMineOnly = true; Save(); break;
@@ -136,7 +138,7 @@ public sealed class Plugin : IDalamudPlugin
         {
             ready = !drawFailed, loggedIn = client.IsLoggedIn, enabled = config.Enabled,
             dataReady = !drawFailed && CanRead && feed.Snapshot?.IsFresh(Environment.TickCount64) == true,
-            dataStatus = window.DataStatus, preview = window.Preview, locked = config.Locked,
+            dataStatus = window.DataStatus, autoArrange = config.AutoArrange, preview = window.Preview, locked = config.Locked,
             visiblePanels = drawFailed || gameGui.GameUiHidden ? 0 : window.RecentPanels(Environment.TickCount64), settingsOpen = window.SettingsOpen,
             effects = new { playerEnabled = config.ShowPlayerEffects, targetEnabled = config.ShowTargetEffects, targetMineOnly = config.TargetEffectsMineOnly, capacity = StatusRibbon.Capacity },
             window = new { requestedMode = "screen", actualMode = "screen" },

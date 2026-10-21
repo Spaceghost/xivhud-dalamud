@@ -4,7 +4,7 @@
   "InternalName": "XivHud.Vitals",
   "AssemblyVersion": "0.1.0.1",
   "Punchline": "An illustrated field HUD: your aether, your companions, your focus.",
-  "Description": "Four independent panels for player HP and MP/CP/GP, target and focus-target HP and casts, and the local party. Brass, vellum and aether-blue match Journal and Character. Locked panels pass mouse input through. /xivvitals settings opens appearance and layout; /xivvitals preview shows labelled sample data. No native HUD suppression or game actions. Manual development build pending in-game acceptance. Optional player and target status-effect ribbons show game icons, current timers, validated stack counts and dispellable markings. Configure with /xivvitals settings.",
+  "Description": "Four independent panels for player HP and MP/CP/GP, target and focus-target HP and casts, and the local party. Brass, vellum and aether-blue match Journal and Character. Locked panels pass mouse input through. /xivvitals settings opens appearance and layout; /xivvitals preview shows labelled sample data. No native HUD suppression or game actions. Manual development build pending in-game acceptance. Optional player and target status-effect ribbons show game icons, current timers, validated stack counts and dispellable markings. Configure with /xivvitals settings. Automatic placement fits the six panels around a clear centre as resolution changes, while preserving manual positions.",
   "ApplicableVersion": "any",
   "DalamudApiLevel": 15,
   "Tags": [

@@ -9,6 +9,7 @@ public sealed class Configuration : IPluginConfiguration
 {
     public int Version { get; set; } = 1;
     public bool Enabled { get; set; }
+    public bool AutoArrange { get; set; }
     public bool Locked { get; set; } = true;
     public bool ShowPlayer { get; set; } = true;
     public bool ShowTarget { get; set; } = true;
@@ -47,7 +48,7 @@ public sealed class Configuration : IPluginConfiguration
     internal void ResetLayout()
     {
         foreach (var kind in Enum.GetValues<PanelKind>()) SetAnchor(kind, PanelLayout.DefaultAnchor(kind));
-        Scale = 1;
+        Scale = 1; AutoArrange = false;
     }
 
     internal void Normalize()
