@@ -1,16 +1,24 @@
 # XivHud family
 
-Three independently loadable Dalamud API 15 plugins, with shared controller and window hosting code. Source is collected here so a checkout builds the family without sibling repositories.
+Four independently loadable Dalamud API 15 plugins, with shared illustration, controller and window hosting code. Source is collected here so a checkout builds the family without sibling repositories.
 
 | Part | Purpose | Publication |
 | --- | --- | --- |
 | XivHud | Reversible native HUD visibility and focused controller broker | Experimental testing package |
 | XivHud.Journal | Illustrated accepted-quest journal, local bookmarks, native map handoff | Experimental testing package |
 | XivHud.Character | Illustrated equipment, attributes, jobs and gear-set record | Manual development package; live acceptance pending |
+| XivHud.Vitals | Passive player, target, focus-target and party HUD panels | Manual development package; live acceptance pending |
 | XivHud.Windowing / Windowing.Dalamud | Screen layout, optional native frames and Ghostty hosts | Bundled libraries, no installer entry |
 | XivHud.Protocol | Versioned cached status and queued UI operations | Bundled library |
 
-Journal and Character work with mouse and keyboard without XivHud. The optional XivHud broker handles only focused local windows. KamiToolKit supplies native frames; Ghostty supplies optional world hosting. The three plugins have their own settings and lifecycle.
+Journal and Character work with mouse and keyboard without XivHud. The optional XivHud broker handles only focused local windows. KamiToolKit supplies native frames; Ghostty supplies optional world hosting. Each plugin has its own settings and lifecycle.
+
+Vitals is the first persistent field HUD module. It works independently of XivHud,
+Journal, Character, Umbra, Ghostty and KamiToolKit. Locked panels pass clicks
+through and never acquire controller input. It starts disabled; `/xivvitals preview`
+shows labelled sample data, including while logged out, and `/xivvitals open`
+enables live readings. Native hotbars and job gauges remain necessary. Vitals does
+not suppress the native HUD. See [Vitals](xivhud-vitals/README.md).
 
 Add `https://spacegho.st/mods/ffxiv/plugins.json` as an experimental repository and enable testing builds for HUD and Journal. Do not install Character from the automatic listing: its release asset is explicitly marked `dev`, pending first live acceptance. See the [family site](https://spacegho.st/mods/ffxiv/xivhud/).
 
@@ -24,18 +32,19 @@ tools/build.sh --test --locked
 tools/package.sh
 ```
 
-For local references: `tools/build.sh --references /path/to/reviewed/dalamud --test --locked`. `--offline-feed /path/to/nuget/cache` is available for offline builds. Dependencies have committed NuGet lock files. Release ZIPs use sorted entries and the source commit timestamp; rerunning packaging for the same outputs produces identical checksums. `release/build-info.json` records the source and reference hashes. Game-provided DLLs are excluded. Three ZIPs are built, but only HUD and Journal appear in `pluginmaster-testing.json`.
+For local references: `tools/build.sh --references /path/to/reviewed/dalamud --test --locked`. `--offline-feed /path/to/nuget/cache` is available for offline builds. Dependencies have committed NuGet lock files. Release ZIPs use sorted entries and the source commit timestamp; rerunning packaging for the same outputs produces identical checksums. `release/build-info.json` records the source and reference hashes. Game-provided DLLs are excluded. Four ZIPs are built, but only HUD and Journal appear in `pluginmaster-testing.json`.
 
-CI runs builds and all six offline suites against the reviewed references and uploads packages. A separate manually dispatched release workflow publishes the `testing` channel from `main` after the same checks. No build starts the game or uploads player data.
+CI runs builds and all seven offline suites against the reviewed references and uploads packages. A separate manually dispatched release workflow publishes the `testing` channel from `main` after the same checks. No build starts the game or uploads player data. Character and Vitals ZIPs remain manual development assets outside the automatic listing.
 
 ## Controls and recovery
 
 - `/xivhud on` hides native HUD categories; `/xivhud off` restores them. `/xivhud` opens settings. Defaults off and preserves saved native layouts.
 - `/xivjournal` opens Journal; `/xivjournal native` opens the original; `/xivjournal screen` recovers the normal screen window.
 - `/xivcharacter` opens Character; `/xivcharacter native` opens the original; `/xivcharacter screen` recovers its screen window.
+- `/xivvitals settings` opens Vitals appearance; `preview` shows sample panels; `open` enables live panels; `close` hides them; `lock` enables click-through.
 - Journal and Character can choose screen, native frame, or optional Ghostty world hosting. Requested mode and actual presentation are separate diagnostics.
 
-Full module documentation: [HUD](xivhud-dalamud/README.md), [Journal](xivhud-journal/README.md), [Character](xivhud-character/README.md), [Windowing](xivhud-windowing/README.md). Their earlier verification records describe those checks, not acceptance of this publication build.
+Full module documentation: [HUD](xivhud-dalamud/README.md), [Journal](xivhud-journal/README.md), [Character](xivhud-character/README.md), [Vitals](xivhud-vitals/README.md), [Windowing](xivhud-windowing/README.md). Their earlier verification records describe those checks, not acceptance of this publication build.
 
 ## MCP integration
 

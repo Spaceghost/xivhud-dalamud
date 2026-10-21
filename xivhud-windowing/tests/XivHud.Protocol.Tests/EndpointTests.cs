@@ -3,6 +3,23 @@ using XivHud.Protocol;
 
 public class EndpointTests
 {
+    [Fact]
+    public void VitalsSupportsOnlyItsScreenControlsAndQueuesThemForTheOwner()
+    {
+        using var endpoint = new HudEndpoint("vitals");
+        endpoint.Publish(new { enabled = false, preview = false });
+        var caps = Reply(endpoint, Request("api.version")).GetProperty("result");
+        Assert.Equal("vitals", caps.GetProperty("module").GetString());
+        Assert.DoesNotContain("window.mode", caps.GetProperty("methods").EnumerateArray().Select(v => v.GetString()));
+        foreach (var method in new[] { "window.mode", "window.original", "hud.set_enabled", "controller.renew" })
+            Assert.False(Reply(endpoint, Request(method)).GetProperty("ok").GetBoolean());
+        foreach (var method in new[] { "window.open", "window.close", "window.settings" })
+            Assert.True(Reply(endpoint, Request(method)).GetProperty("ok").GetBoolean());
+        var applied = new List<string>(); endpoint.Process(c => { applied.Add(c.Method); return null; });
+        Assert.Equal(new[] { "window.open", "window.close", "window.settings" }, applied);
+        Assert.False(Reply(endpoint, Request("status")).GetProperty("result").GetProperty("state").GetProperty("enabled").GetBoolean());
+    }
+
     private static JsonElement Reply(HudEndpoint endpoint, string request) => JsonDocument.Parse(endpoint.Call(request)).RootElement.Clone();
     private static string Request(string method, object? parameters = null) => JsonSerializer.Serialize(new { method, @params = parameters ?? new { } });
 

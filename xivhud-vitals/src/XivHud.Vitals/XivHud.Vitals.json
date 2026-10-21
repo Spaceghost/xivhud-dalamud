@@ -1,0 +1,15 @@
+{
+  "Author": "Johnneylee Jack Rollins",
+  "Name": "XivHud · Vitals",
+  "InternalName": "XivHud.Vitals",
+  "AssemblyVersion": "0.1.0.0",
+  "Punchline": "An illustrated field HUD: your aether, your companions, your focus.",
+  "Description": "Four independent panels for player HP and MP/CP/GP, target and focus-target HP and casts, and the local party. Brass, vellum and aether-blue match Journal and Character. Locked panels pass mouse input through. /xivvitals settings opens appearance and layout; /xivvitals preview shows labelled sample data. No native HUD suppression or game actions. Manual development build pending in-game acceptance.",
+  "ApplicableVersion": "any",
+  "DalamudApiLevel": 15,
+  "Tags": ["hud", "interface", "party", "target", "umbra"],
+  "LoadRequiredState": 0,
+  "LoadSync": false,
+  "LoadPriority": 0,
+  "RepoUrl": "https://github.com/Spaceghost/xivhud-dalamud"
+}

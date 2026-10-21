@@ -9,7 +9,7 @@ using Dalamud.Interface.Textures;
 using Dalamud.Interface.Utility;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
-using static XivHud.Journal.JournalStyle;
+using static XivHud.Style.IllustratedStyle;
 
 namespace XivHud.Journal;
 

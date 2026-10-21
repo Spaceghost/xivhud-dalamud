@@ -1,0 +1,11 @@
+<Project Sdk="Dalamud.NET.Sdk/15.0.0">
+  <PropertyGroup>
+    <AssemblyName>XivHud.Vitals</AssemblyName><RootNamespace>XivHud.Vitals</RootNamespace>
+    <Version>0.1.0.0</Version><TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../XivHud.Vitals.Core/XivHud.Vitals.Core.csproj" />
+    <ProjectReference Include="../../../xivhud-windowing/src/XivHud.Protocol/XivHud.Protocol.csproj" />
+    <Compile Include="../../../shared/IllustratedStyle.cs" Link="IllustratedStyle.cs" />
+  </ItemGroup>
+</Project>

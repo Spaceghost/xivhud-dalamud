@@ -1,10 +1,10 @@
 using System.Numerics;
 using Dalamud.Bindings.ImGui;
 
-namespace XivHud.Character;
+namespace XivHud.Style;
 
-/// <summary>Shared visual vocabulary for the Eorzean character sheet: ink, brass, vellum and aether.</summary>
-internal static class CharacterStyle
+/// <summary>Shared visual vocabulary for the illustrated HUD family: ink, brass, vellum and aether.</summary>
+internal static class IllustratedStyle
 {
     internal static uint C(byte r, byte g, byte b, byte a = 255) => (uint)(r | g << 8 | b << 16 | a << 24);
     internal static readonly uint Ink = C(20, 32, 38), Leather = C(26, 41, 47), Gold = C(184, 153, 91), PaleGold = C(219, 193, 137);

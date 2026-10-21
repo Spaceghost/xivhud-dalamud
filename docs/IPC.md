@@ -1,14 +1,15 @@
 # HUD family IPC v1
 
-Each plugin independently registers a `Func<string,string>` gate: `XivHud.v1.Call`, `XivHud.Journal.v1.Call`, `XivHud.Character.v1.Call`. Call with JSON `{"method":"status","params":{}}`. Replies are `{"ok":true,"result":...}` or `{"ok":false,"error":"code"}`. No hard assembly dependency on the other modules or MCP is needed. Existing controller and Toggle/OpenSettings/Ready gates remain compatible.
+Each plugin independently registers a `Func<string,string>` gate: `XivHud.v1.Call`, `XivHud.Journal.v1.Call`, `XivHud.Character.v1.Call`, `XivHud.Vitals.v1.Call`. Call with JSON `{"method":"status","params":{}}`. Replies are `{"ok":true,"result":...}` or `{"ok":false,"error":"code"}`. No hard assembly dependency on the other modules or MCP is needed. Existing controller and Toggle/OpenSettings/Ready gates remain compatible.
 
-Read `api.version` before operations. It reports version 1, module (`hud`, `journal`, `character`) and its method allowlist. `status` reports version, module, UTC `observedAt` and state. Snapshots publish at most five times per second on the owner thread; IPC readers only read serialized copies. HUD reports enabled vs applied suppression, controller state and recovery. Journal and Character report login/data readiness, native bridge diagnostics, open/focused state, requested vs actual mode, host diagnostics, controller availability and selection. Journal also reports search, chapter, filter, visible quest IDs and bookmark IDs; Character reports page and selected row. These are UI diagnostics, not a replacement for MCP's game-data providers.
+Read `api.version` before operations. It reports version 1, module (`hud`, `journal`, `character`, `vitals`) and its method allowlist. `status` reports version, module, UTC `observedAt` and state. Snapshots publish at most five times per second on the owner thread; IPC readers only read serialized copies. HUD reports enabled vs applied suppression, controller state and recovery. Journal and Character report login/data readiness, native bridge diagnostics, open/focused state, requested vs actual mode, host diagnostics, controller availability and selection. Journal also reports search, chapter, filter, visible quest IDs and bookmark IDs; Character reports page and selected row. These are UI diagnostics, not a replacement for MCP's game-data providers.
 
 | Method | Modules | Parameters |
 | --- | --- | --- |
 | hud.set_enabled | hud | enabled: boolean |
 | window.open / window.close / window.settings / window.original | journal, character | none |
 | window.close / window.settings | hud | none |
+| window.open / window.close / window.settings | vitals | none |
 | window.mode | journal, character | mode: screen, native_frame or world; placement optional only for world: Hud, Companion, World, Ground |
 | journal.select | journal | questId: nonzero Quest row ID |
 | journal.bookmark | journal | questId, bookmarked: boolean |
@@ -22,3 +23,12 @@ Inputs are limited to 4096 characters and depth 8. Unknown methods/fields and ma
 IPC itself is local and has no authenticated caller identity: the optional caller field is descriptive only. XivMcp's existing Action tier and local approval service gate its six mutation tools. Other Dalamud plugins calling these local gates directly are responsible for their own user consent.
 
 Recovery is always available locally: `/xivhud off`, `/xivjournal screen`, `/xivcharacter screen`, or open the game's original window. No synthetic key input, global gamepad navigation, movement or automatic gear changes are exposed through this contract.
+
+Vitals identifies itself as `vitals`. Its diagnostics distinguish enabled,
+preview, locked, dataReady, visiblePanels and screen mode; they contain no actor
+identities or combat values. Vitals supports only screen panels, so `window.mode`
+and `window.original` are refused rather than presented as successful fallbacks.
+`window.open` enables live panels and stops preview; `window.close` disables
+panels, preview and settings; `window.settings` opens appearance without enabling
+live panels. Local recovery is `/xivvitals close`. Additive module discovery does
+not change the v1 operations or validation of the three existing modules.
