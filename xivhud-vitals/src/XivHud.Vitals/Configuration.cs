@@ -14,6 +14,11 @@ public sealed class Configuration : IPluginConfiguration
     public bool ShowTarget { get; set; } = true;
     public bool ShowFocus { get; set; } = true;
     public bool ShowParty { get; set; } = true;
+    public bool ShowPlayerEffects { get; set; }
+    public bool ShowTargetEffects { get; set; }
+    public bool TargetEffectsMineOnly { get; set; } = true;
+    public Vector2 PlayerEffectsAnchor { get; set; } = PanelLayout.DefaultAnchor(PanelKind.PlayerEffects);
+    public Vector2 TargetEffectsAnchor { get; set; } = PanelLayout.DefaultAnchor(PanelKind.TargetEffects);
     public bool Ornament { get; set; } = true;
     public bool DarkPaper { get; set; }
     public float Scale { get; set; } = 1;
@@ -23,7 +28,7 @@ public sealed class Configuration : IPluginConfiguration
     public Vector2 PartyAnchor { get; set; } = PanelLayout.DefaultAnchor(PanelKind.Party);
 
     internal Vector2 Anchor(PanelKind kind) => kind switch
-    { PanelKind.Player => PlayerAnchor, PanelKind.Target => TargetAnchor, PanelKind.Focus => FocusAnchor, _ => PartyAnchor };
+    { PanelKind.Player => PlayerAnchor, PanelKind.Target => TargetAnchor, PanelKind.Focus => FocusAnchor, PanelKind.PlayerEffects => PlayerEffectsAnchor, PanelKind.TargetEffects => TargetEffectsAnchor, _ => PartyAnchor };
 
     internal void SetAnchor(PanelKind kind, Vector2 value)
     {
@@ -34,6 +39,8 @@ public sealed class Configuration : IPluginConfiguration
             case PanelKind.Target: TargetAnchor = value; break;
             case PanelKind.Focus: FocusAnchor = value; break;
             case PanelKind.Party: PartyAnchor = value; break;
+            case PanelKind.PlayerEffects: PlayerEffectsAnchor = value; break;
+            case PanelKind.TargetEffects: TargetEffectsAnchor = value; break;
         }
     }
 

@@ -40,3 +40,7 @@ draw the panel. Status includes `tracker.enabled`, `locked`, `filter`, `limit`
 and recently drawn `visibleQuestIds`. An applied preference does not imply visible
 quests. The tracker never modifies native tracking or controller ownership.
 Older Journal versions must be detected through the method list before use.
+
+Vitals 0.1.0.1 adds an `effects` diagnostic object: `playerEnabled`, `targetEnabled`,
+`targetMineOnly`, and `capacity`. This reports display preferences only; effect
+names, status IDs, durations, sources and actor identities are not exported.

@@ -23,7 +23,7 @@ do not establish visual quality, accuracy or performance in the live game.
 No native windows or input hooks are installed. No game actions are invoked.
 No controller lease is acquired. Vitals does not require the other HUD plugins,
 Umbra, Ghostty or KamiToolKit. It never changes native HUD visibility or layouts.
-Native hotbars, status effects, job gauges, enmity and other unreplaced controls
+Native hotbars, job gauges, enmity and other unreplaced controls
 remain important; do not hide the whole native HUD just to try these panels.
 
 ## Controls
@@ -88,3 +88,30 @@ thread. World/native mode and original-window handoffs are unsupported.
 Before installer publication, complete [live acceptance](../docs/VITALS-ACCEPTANCE.md).
 The labelled preview is an actual plugin drawing mode, not a game screenshot or
 evidence that live combat/controller interaction has passed.
+
+## Enchantments and target effects (0.1.0.1 development)
+
+Two optional ribbons extend the existing Vitals HUD. Enable them in Appearance or
+with `/xivvitals effects`; `/xivvitals effects off` hides both. They use the same
+lock, scale, saved anchors and illustration style. Live Vitals must also be enabled.
+They start off on upgrade; labelled sample preview includes both ribbons.
+
+Each ribbon displays up to eight current effects with game icons, names, remaining
+time and validated stack counts. Dispellable effects appear first; native slot
+order remains stable within that priority. A visible overflow count points to the
+full native list. Missing icons leave the text and a geometric fallback intact.
+Game textures are borrowed from Dalamud and are never bundled with the plugin.
+
+Target effects default to those applied by you. `/xivvitals effects all` shows all
+sources and `effects mine` restores the filter. Duplicate status IDs in different
+slots are preserved. Zero, negative and invalid timers show a dash; only explicit
+permanent-status metadata shows infinity. Countdown interpolation is bounded to
+250 ms and the normal 500 ms freshness limit hides stale snapshots.
+
+Disabled ribbons do not read status lists. Display selection is cached between
+new snapshots. No effect is removed, targeted or cleansed by these panels; locked
+ribbons do not accept input. MCP module snapshots expose the ribbon preferences
+and capacity without exporting effect or actor data. Existing `execute_command`
+can invoke the documented `/xivvitals effects` commands; window controls remain
+capability checked. Live status accuracy, icons, physical input and performance
+acceptance are pending.

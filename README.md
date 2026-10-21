@@ -7,7 +7,7 @@ Four independently loadable Dalamud API 15 plugins, with shared illustration, co
 | XivHud | Reversible native HUD visibility and focused controller broker | Experimental testing package |
 | XivHud.Journal | Illustrated accepted-quest journal, local bookmarks, native map handoff, compact quest tracker | Experimental testing package |
 | XivHud.Character | Illustrated equipment, attributes, jobs and gear-set record | Manual development package; live acceptance pending |
-| XivHud.Vitals | Passive player, target, focus-target and party HUD panels | Manual development package; live acceptance pending |
+| XivHud.Vitals | Passive player, target, focus-target, party and optional status-effect HUD panels | Manual development package; live acceptance pending |
 | XivHud.Windowing / Windowing.Dalamud | Screen layout, optional native frames and Ghostty hosts | Bundled libraries, no installer entry |
 | XivHud.Protocol | Versioned cached status and queued UI operations | Bundled library |
 

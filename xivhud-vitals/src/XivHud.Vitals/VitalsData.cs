@@ -11,8 +11,9 @@ internal sealed class VitalsData(IObjectTable objects, ITargetManager targets, I
 {
     private readonly Dictionary<uint, (string Abbreviation, uint Category)> jobs = [];
     private readonly Dictionary<uint, string> actions = [];
+    private readonly Dictionary<uint, (string Name, uint Icon, byte MaxStacks, bool Permanent, bool Dispellable)> statuses = [];
 
-    internal VitalsSnapshot? Read(long now)
+    internal VitalsSnapshot? Read(long now, bool playerEffects, bool targetEffects)
     {
         if (!client.IsLoggedIn || objects.LocalPlayer is not { } local) return null;
         var members = new List<PartyReading>(8);
@@ -30,8 +31,36 @@ internal sealed class VitalsData(IObjectTable objects, ITargetManager targets, I
                 here && member.MaxHP > 0 && member.CurrentHP == 0, null);
             members.Add(new(i + 1, actor, here, member.EntityId == local.EntityId, i == party.PartyLeaderIndex));
         }
-        return new(now, Actor(local), targets.Target is ICharacter target ? Actor(target) : null,
-            targets.FocusTarget is ICharacter focus ? Actor(focus) : null, members.ToArray());
+        var target = targets.Target as ICharacter;
+        return new(now, Actor(local), target is not null ? Actor(target) : null,
+            targets.FocusTarget is ICharacter focus ? Actor(focus) : null, members.ToArray())
+        {
+            PlayerEffects = playerEffects ? Effects(local, local.EntityId) : null,
+            TargetEffects = targetEffects && target is IBattleChara battle ? Effects(battle, local.EntityId) : null,
+        };
+    }
+
+    private StatusReading[] Effects(IBattleChara actor, uint localId)
+    {
+        var result = new List<StatusReading>();
+        var list = actor.StatusList;
+        for (var slot = 0; slot < Math.Min(list.Length, 60); slot++)
+        {
+            if (list[slot] is not { StatusId: > 0 } status) continue;
+            if (!statuses.TryGetValue(status.StatusId, out var info))
+            {
+                var row = data.GetExcelSheet<Status>().GetRowOrDefault(status.StatusId);
+                var name = row?.Name.ExtractText();
+                info = (string.IsNullOrWhiteSpace(name) ? $"Status {status.StatusId}" : name,
+                    row?.Icon ?? 0, row?.MaxStacks ?? 0, row?.IsPermanent ?? false, row?.CanDispel ?? false);
+                if (statuses.Count >= 512) statuses.Clear();
+                statuses[status.StatusId] = info;
+            }
+            result.Add(new(slot, status.StatusId, info.Name, info.Icon, status.RemainingTime,
+                info.Permanent, info.Dispellable, status.SourceId == localId,
+                StatusReading.StackCount(status.Param, info.MaxStacks)));
+        }
+        return result.ToArray();
     }
 
     private ActorReading Actor(ICharacter actor)

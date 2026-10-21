@@ -55,3 +55,17 @@ input or performance.
   Unavailable module and unsupported world/native operations remain explicit.
 - Record game/Dalamud build, plugin checksum, observations and any remaining
   limitations. Keep the package manual-only until this evidence is reviewed.
+
+## Status ribbons (0.1.0.1)
+
+Host validation covers unknown/permanent timers, bounded interpolation, stack
+metadata, stable priority, ownership filtering, duplicate effects and overflow.
+The existing viewport tests now include both ribbon kinds. No live acceptance.
+
+Verify icons, localized names, timers, stacks and dispellable markings against the
+native status list. Change target and status sources, including same-ID effects
+from multiple sources. Check the mine/all filter and more-than-eight overflow.
+Check empty versus unavailable data and finite versus permanent/unknown timers.
+Confirm disabled ribbons skip status reads; no missing icon prevents textual HUD
+rendering. Exercise locked input pass-through, drag, resolution changes, logout,
+zoning and cutscenes. Measure representative frame cost before performance claims.

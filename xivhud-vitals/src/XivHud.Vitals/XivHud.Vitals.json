@@ -1,13 +1,19 @@
 {
   "Author": "Johnneylee Jack Rollins",
-  "Name": "XivHud · Vitals",
+  "Name": "XivHud \u00b7 Vitals",
   "InternalName": "XivHud.Vitals",
-  "AssemblyVersion": "0.1.0.0",
+  "AssemblyVersion": "0.1.0.1",
   "Punchline": "An illustrated field HUD: your aether, your companions, your focus.",
-  "Description": "Four independent panels for player HP and MP/CP/GP, target and focus-target HP and casts, and the local party. Brass, vellum and aether-blue match Journal and Character. Locked panels pass mouse input through. /xivvitals settings opens appearance and layout; /xivvitals preview shows labelled sample data. No native HUD suppression or game actions. Manual development build pending in-game acceptance.",
+  "Description": "Four independent panels for player HP and MP/CP/GP, target and focus-target HP and casts, and the local party. Brass, vellum and aether-blue match Journal and Character. Locked panels pass mouse input through. /xivvitals settings opens appearance and layout; /xivvitals preview shows labelled sample data. No native HUD suppression or game actions. Manual development build pending in-game acceptance. Optional player and target status-effect ribbons show game icons, current timers, validated stack counts and dispellable markings. Configure with /xivvitals settings.",
   "ApplicableVersion": "any",
   "DalamudApiLevel": 15,
-  "Tags": ["hud", "interface", "party", "target", "umbra"],
+  "Tags": [
+    "hud",
+    "interface",
+    "party",
+    "target",
+    "umbra"
+  ],
   "LoadRequiredState": 0,
   "LoadSync": false,
   "LoadPriority": 0,

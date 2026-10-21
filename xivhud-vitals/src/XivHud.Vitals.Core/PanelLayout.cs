@@ -2,7 +2,7 @@ using System.Numerics;
 
 namespace XivHud.Vitals.Core;
 
-public enum PanelKind { Player, Target, Focus, Party }
+public enum PanelKind { Player, Target, Focus, Party, PlayerEffects, TargetEffects }
 
 public readonly record struct PanelRect(Vector2 Position, Vector2 Size, float Scale);
 
@@ -14,6 +14,8 @@ public static class PanelLayout
         PanelKind.Player => new(.5f, .88f),
         PanelKind.Target => new(.5f, .08f),
         PanelKind.Focus => new(.98f, .28f),
+        PanelKind.PlayerEffects => new(.02f, .98f),
+        PanelKind.TargetEffects => new(.98f, .02f),
         _ => new(.02f, .38f),
     };
 
@@ -22,6 +24,7 @@ public static class PanelLayout
         PanelKind.Player => new(404, 166),
         PanelKind.Target => new(432, 144),
         PanelKind.Focus => new(336, 144),
+        PanelKind.PlayerEffects or PanelKind.TargetEffects => new(432, 270),
         _ => new(310, 50 + Math.Clamp(partyCount, 1, 8) * 58),
     };
 

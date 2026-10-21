@@ -30,6 +30,9 @@ public sealed record PartyReading(int Slot, ActorReading Actor, bool Here, bool 
 public sealed record VitalsSnapshot(long ObservedAt, ActorReading Player, ActorReading? Target,
     ActorReading? Focus, IReadOnlyList<PartyReading> Party)
 {
+    public IReadOnlyList<StatusReading>? PlayerEffects { get; init; }
+    public IReadOnlyList<StatusReading>? TargetEffects { get; init; }
+
     public const int FreshnessMilliseconds = 500;
     public bool IsFresh(long now) => now >= ObservedAt && now - ObservedAt <= FreshnessMilliseconds;
     public float AgeSeconds(long now) => now <= ObservedAt ? 0 : Math.Min(.25f, (now - ObservedAt) / 1000f);

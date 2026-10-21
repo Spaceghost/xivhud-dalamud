@@ -3,6 +3,8 @@ using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.GameFonts;
 using Dalamud.Interface.ManagedFontAtlas;
 using Dalamud.Interface.Utility;
+using Dalamud.Interface.Textures;
+using Dalamud.Plugin.Services;
 using Dalamud.Plugin;
 using XivHud.Vitals.Core;
 using static XivHud.Style.IllustratedStyle;
@@ -13,8 +15,25 @@ internal sealed class VitalsWindow : IDisposable
 {
     private readonly Configuration config;
     private readonly Action save;
+    private readonly ITextureProvider textures;
+    private readonly HashSet<uint> failedIcons = [];
     private readonly IFontHandle heading, body, small;
     private bool layoutDirty, fullParty;
+    private IReadOnlyList<StatusReading>? cachedPlayerEffects, cachedTargetEffects;
+    private StatusSelection playerSelection = new([], 0), targetSelection = new([], 0);
+    private bool cachedMineOnly;
+    private StatusSelection SelectEffects(PanelKind kind, IReadOnlyList<StatusReading>? effects, bool mineOnly)
+    {
+        if (kind == PanelKind.PlayerEffects)
+        {
+            if (!ReferenceEquals(effects, cachedPlayerEffects))
+            { cachedPlayerEffects = effects; playerSelection = StatusRibbon.Select(effects ?? [], false); }
+            return playerSelection;
+        }
+        if (!ReferenceEquals(effects, cachedTargetEffects) || cachedMineOnly != mineOnly)
+        { cachedTargetEffects = effects; cachedMineOnly = mineOnly; targetSelection = StatusRibbon.Select(effects ?? [], mineOnly); }
+        return targetSelection;
+    }
     internal bool SettingsOpen { get; set; }
     internal bool Preview { get; set; }
     internal int VisiblePanels { get; private set; }
@@ -22,9 +41,9 @@ internal sealed class VitalsWindow : IDisposable
     internal int RecentPanels(long now) => now >= lastDraw && now - lastDraw <= 500 ? VisiblePanels : 0;
     internal string DataStatus { get; set; } = "Disabled";
 
-    internal VitalsWindow(IDalamudPluginInterface pi, Configuration config, Action save)
+    internal VitalsWindow(IDalamudPluginInterface pi, Configuration config, Action save, ITextureProvider textures)
     {
-        this.config = config; this.save = save;
+        this.config = config; this.save = save; this.textures = textures;
         var acquired = new List<IFontHandle>();
         try
         {
@@ -49,6 +68,9 @@ internal sealed class VitalsWindow : IDisposable
             if (config.ShowTarget && (state.Target is not null || !config.Locked)) ActorPanel(PanelKind.Target, "TARGET", state.Target, state.AgeSeconds(now));
             if (config.ShowFocus && (state.Focus is not null || !config.Locked)) ActorPanel(PanelKind.Focus, "FOCUS", state.Focus, state.AgeSeconds(now));
             if (config.ShowParty && (state.Party.Count > 0 || !config.Locked)) PartyPanel(state.Party);
+            if (config.ShowPlayerEffects || Preview) EffectsPanel(PanelKind.PlayerEffects, state.PlayerEffects, state.AgeSeconds(now));
+            if ((config.ShowTargetEffects || Preview) && (state.Target is not null || !config.Locked))
+                EffectsPanel(PanelKind.TargetEffects, state.TargetEffects, state.AgeSeconds(now));
         }
         if (layoutDirty && !ImGui.IsMouseDown(ImGuiMouseButton.Left)) { layoutDirty = false; save(); }
         if (SettingsOpen) Settings();
@@ -175,6 +197,52 @@ internal sealed class VitalsWindow : IDisposable
             }
         });
 
+    private void EffectsPanel(PanelKind kind, IReadOnlyList<StatusReading>? effects, float age)
+        => Panel(kind, 0, kind == PanelKind.PlayerEffects ? "YOUR ENCHANTMENTS" : "TARGET EFFECTS", (d, p, size, s) =>
+        {
+            var mineOnly = kind == PanelKind.TargetEffects && config.TargetEffectsMineOnly;
+            var selected = SelectEffects(kind, effects, mineOnly);
+            if (selected.Visible.Count == 0)
+                Text(d, p + new Vector2(20, 58) * s,
+                    effects is null ? "Status data unavailable" : mineOnly ? "No effects applied by you" : "No active effects",
+                    16 * s, Muted, body, size.X - 40 * s);
+            for (var i = 0; i < selected.Visible.Count; i++)
+            {
+                var effect = selected.Visible[i];
+                var row = p + new Vector2(20 + i % 2 * 196, 49 + i / 2 * 48) * s;
+                var tint = effect.Dispellable ? C(244, 189, 118) : effect.Mine ? Aether : PaleGold;
+                d.AddRectFilled(row, row + new Vector2(32 * s), C(10, 21, 26), 3 * s);
+                var drewIcon = false;
+                if (effect.Icon != 0 && !failedIcons.Contains(effect.Icon))
+                {
+                    try
+                    {
+                        if (textures.GetFromGameIcon(new GameIconLookup(effect.Icon)).TryGetWrap(out var icon, out _))
+                        { d.AddImage(icon.Handle, row, row + new Vector2(32 * s)); drewIcon = true; }
+                    }
+                    catch
+                    {
+                        // A missing icon must not hide the status name or the rest of the HUD.
+                        if (failedIcons.Count < 512) failedIcons.Add(effect.Icon);
+                    }
+                }
+                if (!drewIcon) Diamond(d, row + new Vector2(16 * s), 9 * s, tint);
+                d.AddRect(row, row + new Vector2(32 * s), tint, 3 * s);
+                if (effect.Stacks > 0)
+                {
+                    var badge = row + new Vector2(18, 19) * s;
+                    d.AddRectFilled(badge, row + new Vector2(35, 35) * s, C(10, 21, 26), 2 * s);
+                    Text(d, badge, effect.Stacks.ToString(), 12 * s, Ivory, small, 22 * s);
+                }
+                Text(d, row + new Vector2(40, 0) * s, effect.Name, 13 * s, Ivory, body, 144 * s);
+                var detail = effect.Duration(age) + (effect.Dispellable ? " · DISPEL" : effect.Mine ? " · YOURS" : "");
+                Text(d, row + new Vector2(40, 19) * s, detail, 11 * s, tint, small, 144 * s);
+            }
+            var footer = selected.Hidden > 0 ? $"+{selected.Hidden} more · full list in native HUD"
+                : mineOnly ? "Applied by you · current target" : "Current effects · dispellable first";
+            Text(d, p + new Vector2(20, 247) * s, footer, 11 * s, Muted, small, size.X - 40 * s);
+        });
+
     private static void Meter(ImDrawListPtr d, Vector2 p, Vector2 size, Resource resource, uint color, float s)
     {
         Fill(d, p, size, resource.Fraction, color, s);
@@ -247,6 +315,14 @@ internal sealed class VitalsWindow : IDisposable
             changed |= ImGui.Checkbox("Focus target", ref focus);
             ImGui.SameLine(); changed |= ImGui.Checkbox("Companions", ref party);
             if (changed) { config.ShowPlayer = player; config.ShowTarget = target; config.ShowFocus = focus; config.ShowParty = party; save(); }
+            ImGui.Separator();
+            var playerEffects = config.ShowPlayerEffects; var targetEffects = config.ShowTargetEffects;
+            var effectsChanged = ImGui.Checkbox("Your enchantments and ailments", ref playerEffects);
+            effectsChanged |= ImGui.Checkbox("Target status effects", ref targetEffects);
+            var mineOnly = config.TargetEffectsMineOnly;
+            effectsChanged |= ImGui.Checkbox("Only effects you applied to the target", ref mineOnly);
+            if (effectsChanged) { config.ShowPlayerEffects = playerEffects; config.ShowTargetEffects = targetEffects; config.TargetEffectsMineOnly = mineOnly; save(); }
+            ImGui.TextWrapped("Effect ribbons show up to eight entries, with an overflow count. Dispellable effects come first. Icons come from your game. A dash means the timer is unknown; infinity requires permanent-status metadata. These panels never remove effects or cast a cleanse.");
             ImGui.Separator();
             if (ImGui.Button(Preview ? "Stop sample preview" : "Preview sample layout")) Preview = !Preview;
             if (Preview)
