@@ -5,7 +5,7 @@ Four independently loadable Dalamud API 15 plugins, with shared illustration, co
 | Part | Purpose | Publication |
 | --- | --- | --- |
 | XivHud | Reversible native HUD visibility and focused controller broker | Experimental testing package |
-| XivHud.Journal | Illustrated accepted-quest journal, local bookmarks, native map handoff | Experimental testing package |
+| XivHud.Journal | Illustrated accepted-quest journal, local bookmarks, native map handoff, compact quest tracker | Experimental testing package |
 | XivHud.Character | Illustrated equipment, attributes, jobs and gear-set record | Manual development package; live acceptance pending |
 | XivHud.Vitals | Passive player, target, focus-target and party HUD panels | Manual development package; live acceptance pending |
 | XivHud.Windowing / Windowing.Dalamud | Screen layout, optional native frames and Ghostty hosts | Bundled libraries, no installer entry |
@@ -34,7 +34,7 @@ tools/package.sh
 
 For local references: `tools/build.sh --references /path/to/reviewed/dalamud --test --locked`. `--offline-feed /path/to/nuget/cache` is available for offline builds. Dependencies have committed NuGet lock files. Release ZIPs use sorted entries and the source commit timestamp; rerunning packaging for the same outputs produces identical checksums. `release/build-info.json` records the source and reference hashes. Game-provided DLLs are excluded. Four ZIPs are built, but only HUD and Journal appear in `pluginmaster-testing.json`.
 
-CI runs builds and all seven offline suites against the reviewed references and uploads packages. A separate manually dispatched release workflow publishes the `testing` channel from `main` after the same checks. No build starts the game or uploads player data. Character and Vitals remain development assets outside the normal automatic listing. An explicit development repository can install them through MCP without manual setup; live acceptance is still pending.
+CI runs builds and all seven offline suites against the reviewed references and uploads packages. A separate manually dispatched release workflow publishes the `testing` channel from `master` after the same checks. No build starts the game or uploads player data. Character and Vitals remain development assets outside the normal automatic listing. An explicit development repository can install them through MCP without manual setup; live acceptance is still pending.
 
 ## Controls and recovery
 
@@ -42,6 +42,7 @@ CI runs builds and all seven offline suites against the reviewed references and 
 - `/xivjournal` opens Journal; `/xivjournal native` opens the original; `/xivjournal screen` recovers the normal screen window.
 - `/xivcharacter` opens Character; `/xivcharacter native` opens the original; `/xivcharacter screen` recovers its screen window.
 - `/xivvitals settings` opens Vitals appearance; `preview` shows sample panels; `open` enables live panels; `close` hides them; `lock` enables click-through.
+- Journal Appearance configures the compact tracker; `/xivjournal tracker` enables it and `tracker off` hides it.
 - Journal and Character can choose screen, native frame, or optional Ghostty world hosting. Requested mode and actual presentation are separate diagnostics.
 
 Full module documentation: [HUD](xivhud-dalamud/README.md), [Journal](xivhud-journal/README.md), [Character](xivhud-character/README.md), [Vitals](xivhud-vitals/README.md), [Windowing](xivhud-windowing/README.md). Their earlier verification records describe those checks, not acceptance of this publication build.
@@ -58,7 +59,8 @@ MIT. [Third-party notices](THIRD-PARTY-NOTICES.md) include the bundled KamiToolK
 
 ## Automatic development setup
 
-The explicit development catalogue contains Character and Vitals only:
+The explicit development catalogue contains Character, Vitals and the Journal
+tracker preview:
 `https://github.com/Spaceghost/xivhud-dalamud/releases/download/development/pluginmaster-development.json`.
 With a current XivMcp server, call `setup_plugins` with `plugins` set to
 `["XivHud.Character", "XivHud.Vitals"]`, this `repositoryUrl`, and `channel` set

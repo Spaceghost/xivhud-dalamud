@@ -19,6 +19,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
     private readonly JournalData data = null!;
     private readonly NativeJournalBridge bridge = null!;
     private readonly JournalWindow window = null!;
+    private readonly JournalTracker tracker = null!;
     private readonly ConcurrentQueue<Action> actions = new();
     private readonly ICallGateProvider<object> toggle = null!, settings = null!;
     private readonly ICallGateProvider<bool> ready = null!;
@@ -28,6 +29,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
     private IReadOnlyList<JournalEntry> entries = [];
     private string? unavailable = "Your journal will be here when you enter Eorzea.";
     private long nextRead;
+    private long lastRead;
     private bool disposed, commandRegistered;
     private readonly object shutdownGate = new();
     private Task? shutdown;
@@ -39,12 +41,15 @@ public sealed class Plugin : IAsyncDalamudPlugin
         config = pi.GetPluginConfig() as Configuration ?? new();
         config.Scale = float.IsFinite(config.Scale) ? Math.Clamp(config.Scale, .8f, 1.5f) : 1;
         config.Bookmarks ??= [];
+        config.TrackerLimit = Math.Clamp(config.TrackerLimit, 1, 5);
+        config.TrackerAnchor = JournalTrackerPolicy.Anchor(config.TrackerAnchor);
         try
         {
             data = new(dataManager);
             bridge = new(lifecycle, framework, log, interop);
             window = new(pi, config, Save, QueueNativeQuest, QueueNativeJournal,
                 id => actions.Enqueue(() => { bridge.ShowOnMap(id); window.Close(); }), textures);
+            tracker = new(pi, config, Save, id => actions.Enqueue(() => window.Open(id)));
             toggle = pi.GetIpcProvider<object>("XivHud.Journal.Toggle");
             settings = pi.GetIpcProvider<object>("XivHud.Journal.OpenSettings");
             ready = pi.GetIpcProvider<bool>("XivHud.Journal.Ready");
@@ -55,7 +60,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
             call.RegisterFunc(ipc.Call);
             PublishStatus();
             commandRegistered = commands.AddHandler("/xivjournal", new CommandInfo(OnCommand)
-                { HelpMessage = "Open XivHud Journal. Options: open, close, settings, screen, frame, world, native, status." });
+                { HelpMessage = "Open XivHud Journal. Options: open, close, settings, screen, frame, world, native, tracker [on/off/lock/unlock/tracked/bookmarks], status." });
             if (!commandRegistered) throw new InvalidOperationException("/xivjournal is already registered.");
             bridge.ToggleRequested += OpenNativeSelection;
             bridge.MainCommandToggleRequested += window.Toggle;
@@ -94,6 +99,12 @@ public sealed class Plugin : IAsyncDalamudPlugin
             case "open": Open(); break;
             case "close": actions.Enqueue(window.Close); break;
             case "settings": Settings(); break;
+            case "tracker": case "tracker on": actions.Enqueue(() => { config.TrackerEnabled = true; Save(); }); break;
+            case "tracker off": actions.Enqueue(() => { config.TrackerEnabled = false; Save(); }); break;
+            case "tracker lock": actions.Enqueue(() => { config.TrackerLocked = true; Save(); }); break;
+            case "tracker unlock": actions.Enqueue(() => { config.TrackerLocked = false; Save(); }); break;
+            case "tracker tracked": actions.Enqueue(() => { config.TrackerBookmarks = false; config.TrackerEnabled = true; Save(); }); break;
+            case "tracker bookmarks": actions.Enqueue(() => { config.TrackerBookmarks = true; config.TrackerEnabled = true; Save(); }); break;
             case "screen": actions.Enqueue(() => { config.WindowHostEnabled = false; config.NativeWindowEnabled = false; Save(); window.Open(); }); break;
             case "frame": actions.Enqueue(() => { config.WindowHostEnabled = false; config.NativeWindowEnabled = true; Save(); window.Open(); }); break;
             case "world": actions.Enqueue(() => { config.NativeWindowEnabled = false; config.WindowHostEnabled = true; config.WindowHostPlacement = "Hud"; Save(); window.Open(); }); break;
@@ -125,7 +136,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
         }
         if (Environment.TickCount64 < nextRead) return;
         nextRead = Environment.TickCount64 + 400;
-        try { entries = data.Read(); unavailable = null; }
+        try { entries = data.Read(); unavailable = null; lastRead = Environment.TickCount64; }
         catch (Exception e)
         {
             if (unavailable is null) log.Warning(e, "XivHud.Journal could not read the current quest journal.");
@@ -147,7 +158,12 @@ public sealed class Plugin : IAsyncDalamudPlugin
             bridge.OpenNative();
             log.Error(e, "XivHud.Journal drawing failed; restored original Journal and disabled adoption for this session.");
         }
-        finally { PublishStatus(); }
+        finally
+        {
+            try { tracker.Draw(entries, client.IsLoggedIn && unavailable is null && Environment.TickCount64 - lastRead <= 2000); }
+            catch (Exception e) { config.TrackerEnabled = false; log.Error(e, "Journal tracker drawing stopped for this session; the quest book remains available."); }
+            PublishStatus();
+        }
     }
 
     private long nextIpcPublish;
@@ -161,6 +177,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
         dataError = unavailable, nativeAdoptionEnabled = config.ReplaceJournal, nativeBridge = bridge?.BridgeState,
         acceptedQuestCount = entries.Count, bookmarks = config.Bookmarks.Order().ToArray(),
         window = window?.IpcState,
+        tracker = tracker?.IpcState,
         commands = new { open = "/xivjournal open", original = "/xivjournal native", recovery = "/xivjournal screen" },
     });
     }
@@ -168,6 +185,14 @@ public sealed class Plugin : IAsyncDalamudPlugin
     private string? ApplyIpc(HudCommand command)
     {
         var p = command.Parameters;
+        if (command.Method == "journal.tracker")
+        {
+            config.TrackerEnabled = p.GetProperty("enabled").GetBoolean();
+            if (p.TryGetProperty("locked", out var locked)) config.TrackerLocked = locked.GetBoolean();
+            if (p.TryGetProperty("filter", out var filter)) config.TrackerBookmarks = filter.GetString() == "bookmarks";
+            if (p.TryGetProperty("limit", out var limit)) config.TrackerLimit = limit.GetInt32();
+            Save(); return null;
+        }
         if (command.Method.StartsWith("journal.", StringComparison.Ordinal))
         {
             if (!client.IsLoggedIn || unavailable is not null) return "journal_data_unavailable";
@@ -239,5 +264,6 @@ public sealed class Plugin : IAsyncDalamudPlugin
         if (commandRegistered) commands.RemoveHandler("/xivjournal");
         toolbar?.Remove(); toolbar = null;
         window?.Dispose();
+        tracker?.Dispose();
     }
 }

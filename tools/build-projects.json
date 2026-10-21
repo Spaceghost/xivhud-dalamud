@@ -27,7 +27,8 @@
         "XivHud.Windowing.Dalamud.dll",
         "XivHud.Protocol.dll",
         "KamiToolKit.dll"
-      ]
+      ],
+      "development": true
     },
     {
       "project": "XivHud.Character",

@@ -2,16 +2,17 @@
   "Author": "Johnneylee Jack Rollins",
   "Name": "XivHud \u00b7 Journal",
   "InternalName": "XivHud.Journal",
-  "AssemblyVersion": "0.1.0.1",
+  "AssemblyVersion": "0.1.0.2",
   "Punchline": "An adventurer's journal for an Umbra-centered Eorzea.",
-  "Description": "A richly detailed quest journal with live accepted quests, search, personal bookmarks and an accessible parchment reading page. Open from Umbra or /xivjournal. The original journal remains available for all native quest actions.",
+  "Description": "An illustrated quest book with live accepted quests, search, local bookmarks, a parchment reading page and an optional compact quest tracker. Open from the server-info toolbar or /xivjournal; Appearance configures the tracker. The original journal remains available for native quest actions.",
   "ApplicableVersion": "any",
   "DalamudApiLevel": 15,
   "Tags": [
     "journal",
     "quests",
     "umbra",
-    "interface"
+    "interface",
+    "hud"
   ],
   "LoadRequiredState": 0,
   "LoadSync": false,

@@ -42,7 +42,7 @@ for item in config['packages']:
   url='https://github.com/'+config['repo']+'/releases/download/testing/'+alias.name
   entry={**manifest,'RepoUrl':'https://github.com/'+config['repo'],'IconUrl':item['icon'],'DownloadLinkInstall':url,'DownloadLinkUpdate':url,'DownloadLinkTesting':url,'TestingAssemblyVersion':version,'IsTestingExclusive':True,'LastUpdate':a.epoch}
   listing.append(entry)
- if not item['installer']:
+ if not item['installer'] or item.get('development', False):
   url='https://github.com/'+config['repo']+'/releases/download/development/'+artifact
   development.append({**manifest,'RepoUrl':'https://github.com/'+config['repo'],'DownloadLinkInstall':url,'DownloadLinkUpdate':url,'DownloadLinkTesting':url,'TestingAssemblyVersion':version,'TestingDalamudApiLevel':manifest['DalamudApiLevel'],'IsTestingExclusive':True,'LastUpdate':a.epoch})
 (a.out/'pluginmaster-development.json').write_text(json.dumps(development,indent=2)+'\n')

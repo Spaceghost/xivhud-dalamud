@@ -15,7 +15,7 @@ public static class HudCommands
     public static string[] Methods(string module) => module switch
     {
         "hud" => ["hud.set_enabled", "window.settings", "window.close"],
-        "journal" => ["window.open", "window.close", "window.settings", "window.mode", "window.original", "journal.select", "journal.bookmark", "journal.show_map"],
+        "journal" => ["window.open", "window.close", "window.settings", "window.mode", "window.original", "journal.select", "journal.bookmark", "journal.show_map", "journal.tracker"],
         "character" => ["window.open", "window.close", "window.settings", "window.mode", "window.original", "character.page"],
         "vitals" => ["window.open", "window.close", "window.settings"],
         _ => [],
@@ -32,6 +32,7 @@ public static class HudCommands
             "window.mode" => ["mode", "placement"],
             "journal.select" or "journal.show_map" => ["questId"],
             "journal.bookmark" => ["questId", "bookmarked"],
+            "journal.tracker" => ["enabled", "locked", "filter", "limit"],
             "character.page" => ["page"],
             _ => [],
         };
@@ -45,7 +46,14 @@ public static class HudCommands
             if (p.TryGetProperty("placement", out _) && (!Choice(p, "placement", Placements) || p.GetProperty("mode").GetString() != "world"))
                 return "placement_requires_world_mode";
         }
-        if (command.Method.StartsWith("journal.", StringComparison.Ordinal))
+        if (command.Method == "journal.tracker")
+        {
+            if (!Boolean(p, "enabled")) return "enabled_must_be_boolean";
+            if (p.TryGetProperty("locked", out _) && !Boolean(p, "locked")) return "locked_must_be_boolean";
+            if (p.TryGetProperty("filter", out _) && !Choice(p, "filter", ["tracked", "bookmarks"])) return "invalid_tracker_filter";
+            if (p.TryGetProperty("limit", out var limit) && (limit.ValueKind != JsonValueKind.Number || !limit.TryGetInt32(out var count) || count is < 1 or > 5)) return "invalid_tracker_limit";
+        }
+        if (command.Method.StartsWith("journal.", StringComparison.Ordinal) && command.Method != "journal.tracker")
         {
             if (!p.TryGetProperty("questId", out var id) || !id.TryGetUInt32(out var value) || value == 0) return "invalid_quest_id";
             if (command.Method == "journal.bookmark" && !Boolean(p, "bookmarked")) return "bookmarked_must_be_boolean";

@@ -17,4 +17,9 @@ public sealed class Configuration : IPluginConfiguration
     public string ControllerLabels { get; set; } = "PlayStation";
     public bool SwapConfirmBack { get; set; }
     public HashSet<uint> Bookmarks { get; set; } = [];
+    public bool TrackerEnabled { get; set; }
+    public bool TrackerLocked { get; set; } = true;
+    public bool TrackerBookmarks { get; set; }
+    public int TrackerLimit { get; set; } = 3;
+    public System.Numerics.Vector2 TrackerAnchor { get; set; } = new(.98f, .58f);
 }

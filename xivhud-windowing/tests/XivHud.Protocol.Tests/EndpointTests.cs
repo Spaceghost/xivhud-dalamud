@@ -3,6 +3,20 @@ using XivHud.Protocol;
 
 public class EndpointTests
 {
+    [Theory]
+    [InlineData("{\"enabled\":true,\"locked\":true,\"filter\":\"bookmarks\",\"limit\":5}", true)]
+    [InlineData("{\"enabled\":false}", true)]
+    [InlineData("{\"enabled\":true,\"filter\":\"all\"}", false)]
+    [InlineData("{\"enabled\":true,\"limit\":0}", false)]
+    [InlineData("{\"enabled\":true,\"limit\":\"3\"}", false)]
+    [InlineData("{\"enabled\":true,\"locked\":\"yes\"}", false)]
+    [InlineData("{}", false)]
+    public void TrackerControlsAcceptOnlyExplicitUiPreferences(string parameters, bool accepted)
+    {
+        using var endpoint = new HudEndpoint("journal");
+        Assert.Equal(accepted, Reply(endpoint, "{\"method\":\"journal.tracker\",\"params\":" + parameters + "}").GetProperty("ok").GetBoolean());
+    }
+
     [Fact]
     public void VitalsSupportsOnlyItsScreenControlsAndQueuesThemForTheOwner()
     {

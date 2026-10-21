@@ -5,6 +5,8 @@
   <PackageReference Include="xunit.v3.mtp-off" Version="4.0.1" />
   <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0" />
   <Compile Include="../../src/XivHud.Journal/JournalText.cs" Link="JournalText.cs" />
+  <Compile Include="../../src/XivHud.Journal/JournalEntry.cs" Link="JournalEntry.cs" />
+  <Compile Include="../../src/XivHud.Journal/JournalTrackerPolicy.cs" Link="JournalTrackerPolicy.cs" />
   <Compile Include="../../src/XivHud.Journal/JournalCommandPolicy.cs" Link="JournalCommandPolicy.cs" />
   <Compile Include="../../src/XivHud.Journal/JournalControllerInput.cs" Link="JournalControllerInput.cs" />
   <Compile Include="../../src/XivHud.Journal/JournalControllerIntent.cs" Link="JournalControllerIntent.cs" />

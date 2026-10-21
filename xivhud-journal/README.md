@@ -38,6 +38,29 @@ Journal main command; quest links open the requested page. All other native
 commands pass through. This module installs no raw keyboard or controller hooks.
 Bookmarks are local preferences and do not change quest priority or tracking.
 
+## Compact quest tracker (development)
+
+The existing quest book now has a matching passive HUD panel. Appearance offers
+visibility, lock, filter and quest-limit controls with controller navigation. Enable it with
+`/xivjournal tracker`; hide it with `/xivjournal tracker off`. It starts disabled
+and locked so it cannot take game clicks. `/xivjournal tracker unlock` allows
+moving the title and clicking a quest to open its full illustrated page;
+`/xivjournal tracker lock` restores click-through behavior. The saved normalized
+position stays within the viewport when the display resolution changes.
+
+Use `/xivjournal tracker tracked` for quests tracked by the game, or
+`/xivjournal tracker bookmarks` for local Journal bookmarks. Neither changes native
+tracking. Priority quests appear first; hidden quests stay hidden. MCP's
+`configure_hud_tracker` configures visibility, locking, filter and a limit of one
+to five quests. The compact panel previews only current objectives, with explicit
+completion and unavailable-objective text; long text is clipped and the full book
+remains available. It hides when the game snapshot is unavailable or stale.
+
+The tracker uses the book's size, palette, ornaments and game fonts. It needs no
+optional window host or controller service. It does not replace the native duty
+list, leves or the main-scenario guide. Host tests/builds are complete; live
+rendering, physical input and performance acceptance remain pending.
+
 ## Controller navigation
 
 Open Journal through the game's normal Journal action. A visible aether-blue
@@ -156,4 +179,5 @@ The optional Umbra adapter uses the actual installed Umbra references. See
   controller focus after placement without a mouse click. `/xivjournal screen`
   returned to the normal window; closing released controller ownership.
 
-Installed locally for design iteration. No public release has been published.
+The book has prior local design checks above. The new tracker is published in the
+explicit development feed; those older checks do not establish tracker acceptance.

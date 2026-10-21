@@ -467,12 +467,25 @@ internal sealed class JournalWindow : IDisposable
                     ? nativeHost.IsActive ? "Return to screen" : "Try native frame again"
                     : windowHost.IsHosted ? "Return to screen" : "Try world placement again", new(-1, 0))) HostAction();
             HighlightSetting(9, s);
+            ImGui.Spacing(); ImGui.Separator(); ImGui.TextUnformatted("The roads ahead · quest tracker");
+            var tracker = config.TrackerEnabled;
+            if (ImGui.Checkbox("Show compact quest tracker", ref tracker)) { config.TrackerEnabled = tracker; changed = true; }
+            HighlightSetting(10, s);
+            var locked = config.TrackerLocked;
+            if (ImGui.Checkbox("Lock tracker · pass clicks through", ref locked)) { config.TrackerLocked = locked; changed = true; }
+            HighlightSetting(11, s);
+            if (ImGui.Button(config.TrackerBookmarks ? "Quests: local bookmarks" : "Quests: tracked in game", new(-1, 0))) { config.TrackerBookmarks = !config.TrackerBookmarks; changed = true; }
+            HighlightSetting(12, s);
+            var limit = config.TrackerLimit;
+            if (ImGui.SliderInt("Quest limit", ref limit, 1, 5)) { config.TrackerLimit = limit; changed = true; }
+            HighlightSetting(13, s);
+            using (small.Push()) ImGui.TextWrapped("Unlock to drag the tracker title or open quest pages. Shares this book's size and parchment; native quest tracking is unchanged.");
             ImGui.Spacing(); ImGui.Separator();
             using (small.Push()) ImGui.TextWrapped("The original journal remains available for completed quests, levequests and all native quest actions.");
             if (ImGui.Button("Open original journal", new(-1, 0))) { ImGui.CloseCurrentPopup(); OpenOriginal(); }
-            HighlightSetting(10, s);
+            HighlightSetting(14, s);
             if (ImGui.Button("Done", new(-1, 0))) { ImGui.CloseCurrentPopup(); controllerLayer = ControllerLayer.Journey; }
-            HighlightSetting(11, s);
+            HighlightSetting(15, s);
             var labels = JournalControllerLabels.For(config.ControllerLabels, config.SwapConfirmBack);
             using (small.Push()) ImGui.TextWrapped($"↑ ↓  Choose    ← → / {labels.Confirm}  Change    {labels.Back}  Back");
             if (IsControllerFocused && ImGui.IsKeyPressed(ImGuiKey.Escape)) { ImGui.CloseCurrentPopup(); controllerLayer = ControllerLayer.Journey; }
@@ -544,7 +557,7 @@ internal sealed class JournalWindow : IDisposable
             switch (intent.Command)
             {
                 case JournalControllerCommand.Up: settingFocus = Math.Max(0, settingFocus - 1); revealSetting = true; break;
-                case JournalControllerCommand.Down: settingFocus = Math.Min(11, settingFocus + 1); revealSetting = true; break;
+                case JournalControllerCommand.Down: settingFocus = Math.Min(15, settingFocus + 1); revealSetting = true; break;
                 case JournalControllerCommand.Left: AdjustSetting(-1); break;
                 case JournalControllerCommand.Right: AdjustSetting(1); break;
                 case JournalControllerCommand.Confirm: AdjustSetting(1, true); break;
@@ -625,8 +638,12 @@ internal sealed class JournalWindow : IDisposable
             case 7: CyclePresentation(direction); break;
             case 8: CyclePlacement(direction); break;
             case 9: if (activate) HostAction(); return;
-            case 10: if (activate) OpenOriginal(); return;
-            case 11: if (activate) { closeSettings = true; controllerLayer = ControllerLayer.Journey; } return;
+            case 10: config.TrackerEnabled = !config.TrackerEnabled; break;
+            case 11: config.TrackerLocked = !config.TrackerLocked; break;
+            case 12: config.TrackerBookmarks = !config.TrackerBookmarks; break;
+            case 13: config.TrackerLimit = Math.Clamp(config.TrackerLimit + direction, 1, 5); break;
+            case 14: if (activate) OpenOriginal(); return;
+            case 15: if (activate) { closeSettings = true; controllerLayer = ControllerLayer.Journey; } return;
         }
         save();
     }
