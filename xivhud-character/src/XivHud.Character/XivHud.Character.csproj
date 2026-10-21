@@ -10,4 +10,5 @@
     <ProjectReference Include="../../../xivhud-windowing/src/XivHud.Windowing/XivHud.Windowing.csproj" />
   </ItemGroup>
   <ItemGroup><ProjectReference Include="../../../xivhud-windowing/src/XivHud.Protocol/XivHud.Protocol.csproj" /></ItemGroup>
+  <ItemGroup><Compile Include="../../../shared/IllustratedStyle.cs" Link="IllustratedStyle.cs" /></ItemGroup>
 </Project>
