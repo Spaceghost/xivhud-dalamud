@@ -14,7 +14,7 @@ if a.epoch is None:
 stamp = datetime.datetime.fromtimestamp(max(315532800, a.epoch), datetime.timezone.utc)
 stamp = (stamp.year,stamp.month,stamp.day,stamp.hour,stamp.minute,stamp.second//2*2)
 a.out = a.out.resolve(); a.out.mkdir(parents=True, exist_ok=True)
-listing=[]; packages=[]
+listing=[]; development=[]; packages=[]
 for item in config['packages']:
  manifest=json.loads((ROOT/item['manifest']).read_text()); name=manifest['InternalName']; version=manifest['AssemblyVersion']
  source=ROOT/'artifacts/bin'/item['project']/'release'
@@ -42,6 +42,10 @@ for item in config['packages']:
   url='https://github.com/'+config['repo']+'/releases/download/testing/'+alias.name
   entry={**manifest,'RepoUrl':'https://github.com/'+config['repo'],'IconUrl':item['icon'],'DownloadLinkInstall':url,'DownloadLinkUpdate':url,'DownloadLinkTesting':url,'TestingAssemblyVersion':version,'IsTestingExclusive':True,'LastUpdate':a.epoch}
   listing.append(entry)
+ if not item['installer']:
+  url='https://github.com/'+config['repo']+'/releases/download/development/'+artifact
+  development.append({**manifest,'RepoUrl':'https://github.com/'+config['repo'],'DownloadLinkInstall':url,'DownloadLinkUpdate':url,'DownloadLinkTesting':url,'TestingAssemblyVersion':version,'TestingDalamudApiLevel':manifest['DalamudApiLevel'],'IsTestingExclusive':True,'LastUpdate':a.epoch})
+(a.out/'pluginmaster-development.json').write_text(json.dumps(development,indent=2)+'\n')
 (a.out/'pluginmaster-testing.json').write_text(json.dumps(listing,indent=2)+'\n')
 (a.out/'build-info.json').write_text(json.dumps({'sourceCommit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'references':json.loads((ROOT/'tools/references.json').read_text()),'manualDevelopmentOnly':[i['manifest'] for i in config['packages'] if not i['installer']]},indent=2)+'\n')
 (a.out/'SHA256SUMS').write_text(''.join(hashlib.sha256(f.read_bytes()).hexdigest()+'  '+f.name+'\n' for f in sorted(packages+list(a.out.glob('*.json')))))

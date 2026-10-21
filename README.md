@@ -34,7 +34,7 @@ tools/package.sh
 
 For local references: `tools/build.sh --references /path/to/reviewed/dalamud --test --locked`. `--offline-feed /path/to/nuget/cache` is available for offline builds. Dependencies have committed NuGet lock files. Release ZIPs use sorted entries and the source commit timestamp; rerunning packaging for the same outputs produces identical checksums. `release/build-info.json` records the source and reference hashes. Game-provided DLLs are excluded. Four ZIPs are built, but only HUD and Journal appear in `pluginmaster-testing.json`.
 
-CI runs builds and all seven offline suites against the reviewed references and uploads packages. A separate manually dispatched release workflow publishes the `testing` channel from `main` after the same checks. No build starts the game or uploads player data. Character and Vitals ZIPs remain manual development assets outside the automatic listing.
+CI runs builds and all seven offline suites against the reviewed references and uploads packages. A separate manually dispatched release workflow publishes the `testing` channel from `main` after the same checks. No build starts the game or uploads player data. Character and Vitals remain development assets outside the normal automatic listing. An explicit development repository can install them through MCP without manual setup; live acceptance is still pending.
 
 ## Controls and recovery
 
@@ -55,3 +55,14 @@ The publication builds and IPC contract have offline validation. The FFXIV conta
 ## License
 
 MIT. [Third-party notices](THIRD-PARTY-NOTICES.md) include the bundled KamiToolKit license. Game artwork is loaded from the local game installation.
+
+## Automatic development setup
+
+The explicit development catalogue contains Character and Vitals only:
+`https://github.com/Spaceghost/xivhud-dalamud/releases/download/development/pluginmaster-development.json`.
+With a current XivMcp server, call `setup_plugins` with `plugins` set to
+`["XivHud.Character", "XivHud.Vitals"]`, this `repositoryUrl`, and `channel` set
+to `testing`; poll `get_plugin_setup_status` with the returned id. MCP registers
+the repository, configures testing, installs the bundled libraries, enables the
+plugins and verifies loaded versions. Source builds and game acceptance remain
+separate concerns. The normal testing catalogue still excludes development modules.
