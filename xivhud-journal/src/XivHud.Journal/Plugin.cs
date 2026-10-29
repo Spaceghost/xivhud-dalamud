@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Dalamud.Game.ClientState.Conditions;
 using XivHud.Protocol;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui.Dtr;
@@ -14,6 +15,8 @@ public sealed class Plugin : IAsyncDalamudPlugin
     private readonly ICommandManager commands;
     private readonly IFramework framework;
     private readonly IClientState client;
+    private readonly ICondition condition;
+    private readonly IGameGui gameGui;
     private readonly IPluginLog log;
     private readonly Configuration config;
     private readonly JournalData data = null!;
@@ -35,9 +38,11 @@ public sealed class Plugin : IAsyncDalamudPlugin
     private Task? shutdown;
 
     public Plugin(IDalamudPluginInterface pi, ICommandManager commands, IFramework framework,
-        IClientState client, IDataManager dataManager, IAddonLifecycle lifecycle, IDtrBar dtr, IPluginLog log, ITextureProvider textures, IGameInteropProvider interop)
+        IClientState client, IDataManager dataManager, IAddonLifecycle lifecycle, IDtrBar dtr, IPluginLog log, ITextureProvider textures, IGameInteropProvider interop,
+        ICondition condition, IGameGui gameGui)
     {
         this.pi = pi; this.commands = commands; this.framework = framework; this.client = client; this.log = log;
+        this.condition = condition; this.gameGui = gameGui;
         config = pi.GetPluginConfig() as Configuration ?? new();
         config.Scale = float.IsFinite(config.Scale) ? Math.Clamp(config.Scale, .8f, 1.5f) : 1;
         config.Bookmarks ??= [];
@@ -160,7 +165,11 @@ public sealed class Plugin : IAsyncDalamudPlugin
         }
         finally
         {
-            try { tracker.Draw(entries, client.IsLoggedIn && unavailable is null && Environment.TickCount64 - lastRead <= 2000); }
+            try { tracker.Draw(entries, client.IsLoggedIn && !gameGui.GameUiHidden
+                && !condition[ConditionFlag.BetweenAreas] && !condition[ConditionFlag.BetweenAreas51]
+                && !condition[ConditionFlag.WatchingCutscene] && !condition[ConditionFlag.WatchingCutscene78]
+                && !condition[ConditionFlag.OccupiedInCutSceneEvent]
+                && unavailable is null && Environment.TickCount64 - lastRead <= 2000); }
             catch (Exception e) { config.TrackerEnabled = false; log.Error(e, "Journal tracker drawing stopped for this session; the quest book remains available."); }
             PublishStatus();
         }
