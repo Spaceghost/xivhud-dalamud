@@ -179,7 +179,7 @@ public sealed class SurfaceCatalogTests
         var requests = new List<string>();
         var session = new NavigatorSession((owner, request) => { requests.Add(request); return owner == "ghostty" ? Panels() : Module(owner); });
         session.Refresh(Now);
-        Assert.Equal(6, requests.Count);
+        Assert.Equal(7, requests.Count);
         Assert.All(requests, r => Assert.Contains(JsonDocument.Parse(r).RootElement.GetProperty("method").GetString(), new[] { "status", "panel.list" }));
     }
     [Fact]

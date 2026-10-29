@@ -20,6 +20,7 @@ public static class SurfaceCatalog
         ("character", "Character", "Character", 0xbb9af7),
         ("vitals", "Vitals", "Combat", 0x9ece6a),
         ("combat", "Combat deck", "Combat", 0xff9e64),
+        ("chat", "Chat and notifications", "Communication", 0xf7768e),
         ("hud", "Interface settings", "System", 0x7dcfff),
     ];
 
@@ -107,7 +108,7 @@ public static class SurfaceCatalog
             var name = plugin.InternalName;
             if (string.IsNullOrEmpty(name) || name.Length > 128 || !name.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '_' or '-')) continue;
             if (!names.Add(name) || !plugin.MainUi && !plugin.ConfigUi) continue;
-            var module = name switch { "XivHud" => "hud", "XivHud.Journal" => "journal", "XivHud.Character" => "character", "XivHud.Vitals" => "vitals", "XivHud.Combat" => "combat", _ => null };
+            var module = name switch { "XivHud" => "hud", "XivHud.Journal" => "journal", "XivHud.Character" => "character", "XivHud.Vitals" => "vitals", "XivHud.Combat" => "combat", "XivHud.Chat" => "chat", _ => null };
             if (module is not null)
             {
                 if (output.Any(x => x.Id == "module:" + module && x.Available) || !plugin.Loaded) continue;

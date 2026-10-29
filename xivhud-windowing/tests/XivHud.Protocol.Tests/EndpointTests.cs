@@ -144,4 +144,17 @@ public class EndpointTests
         for (var i = 0; i < 5; i++) endpoint.Process(_ => { applied++; return null; });
         Assert.Equal(32, applied);
     }
+    [Fact]
+    public void ChatNotificationsAreQueuedButOutboundChatIsUnsupported()
+    {
+        using var endpoint = new HudEndpoint("chat");
+        Assert.False(Reply(endpoint, Request("chat.send", new { text = "hello" })).GetProperty("ok").GetBoolean());
+        Assert.False(Reply(endpoint, Request("notification.push", new { title = "Title", text = "Body", kind = "Invalid" })).GetProperty("ok").GetBoolean());
+        var id = Reply(endpoint, Request("notification.push", new { title = "Title", text = "Body", kind = "Info" })).GetProperty("result").GetProperty("requestId").GetString();
+        var applied = 0;
+        endpoint.Process(c => { Assert.Equal("notification.push", c.Method); applied++; return null; });
+        Assert.Equal(1, applied);
+        Assert.Equal("applied", Reply(endpoint, Request("request.status", new { id })).GetProperty("result").GetProperty("state").GetString());
+    }
+
 }

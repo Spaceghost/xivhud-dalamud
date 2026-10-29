@@ -64,4 +64,4 @@ Dalamud references. Controller policy already has neutral-entry, focus-loss and
 lease-expiry tests; this new window still needs physical controller and in-game
 visual acceptance. The build and tests do not launch FFXIV.
 
-A manual Combat development module now implements the saved-bar deck and generic job-resource readings. This is the combat-first slice; live acceptance and bespoke job visuals remain. Chat and notifications are next in the requested order.
+A manual Combat development module now implements the saved-bar deck and generic job-resource readings. This is the combat-first slice; live acceptance and bespoke job visuals remain. The subsequent Chat module implements session conversations, explicit sending, toast/tell cards and a notification inbox. Both remain development modules pending live acceptance.

@@ -1,6 +1,6 @@
 # XivHud family
 
-Five independently loadable Dalamud API 15 plugins, with shared illustration, controller and window hosting code. Source is collected here so a checkout builds the family without sibling repositories.
+Six independently loadable Dalamud API 15 plugins, with shared illustration, controller and window hosting code. Source is collected here so a checkout builds the family without sibling repositories.
 
 | Part | Purpose | Publication |
 | --- | --- | --- |
@@ -8,6 +8,8 @@ Five independently loadable Dalamud API 15 plugins, with shared illustration, co
 | XivHud.Journal | Illustrated accepted-quest journal, local bookmarks, native map handoff, compact quest tracker | Experimental testing package |
 | XivHud.Character | Illustrated equipment, attributes, jobs and gear-set record | Manual development package; live acceptance pending |
 | XivHud.Vitals | Passive player, target, focus-target, party and optional status-effect HUD panels | Manual development package; live acceptance pending |
+| XivHud.Combat | Saved hotbar deck, cooldowns, casts, effects and generic job resources | Manual development package; live acceptance pending |
+| XivHud.Chat | Conversations, explicit message composer and session notification center | Manual development package; live acceptance pending |
 | XivHud.Windowing / Windowing.Dalamud | Screen layout, optional native frames and Ghostty hosts | Bundled libraries, no installer entry |
 | XivHud.Protocol | Versioned cached status and queued UI operations | Bundled library |
 
@@ -32,9 +34,9 @@ tools/build.sh --test --locked
 tools/package.sh
 ```
 
-For local references: `tools/build.sh --references /path/to/reviewed/dalamud --test --locked`. `--offline-feed /path/to/nuget/cache` is available for offline builds. Dependencies have committed NuGet lock files. Release ZIPs use sorted entries and the source commit timestamp; rerunning packaging for the same outputs produces identical checksums. `release/build-info.json` records the source and reference hashes. Game-provided DLLs are excluded. Four ZIPs are built, but only HUD and Journal appear in `pluginmaster-testing.json`.
+For local references: `tools/build.sh --references /path/to/reviewed/dalamud --test --locked`. `--offline-feed /path/to/nuget/cache` is available for offline builds. Dependencies have committed NuGet lock files. Release ZIPs use sorted entries and the source commit timestamp; rerunning packaging for the same outputs produces identical checksums. `release/build-info.json` records the source and reference hashes. Game-provided DLLs are excluded. Six ZIPs are built, but only HUD and Journal appear in `pluginmaster-testing.json`.
 
-CI runs builds and all seven offline suites against the reviewed references and uploads packages. A separate manually dispatched release workflow publishes the `testing` channel from `master` after the same checks. No build starts the game or uploads player data. Character and Vitals remain development assets outside the normal automatic listing. An explicit development repository can install them through MCP without manual setup; live acceptance is still pending.
+CI runs builds and all nine offline suites against the reviewed references and uploads packages. A separate manually dispatched release workflow publishes the `testing` channel from `master` after the same checks. No build starts the game or uploads player data. Character and Vitals remain development assets outside the normal automatic listing. An explicit development repository can install them through MCP without manual setup; live acceptance is still pending.
 
 ## Controls and recovery
 
@@ -75,4 +77,4 @@ separate concerns. The normal testing catalogue still excludes development modul
 and Ghostty world panels. It supports keyboard/controller selection and explicit
 focus, recovery and placement actions. See the [complete UI rewrite roadmap](docs/UI_REWRITE.md).
 
-Combat is the next UI rewrite slice: `/xivcombat` opens its settings, `open` enables the deck and `preview` shows non-interactive sample data. See [Combat](xivhud-combat/README.md). Chat and notifications follow combat.
+Combat and chat are implemented as development modules: `/xivcombat` opens its settings, `open` enables the deck and `preview` shows non-interactive sample data. See [Combat](xivhud-combat/README.md). `/xivchat open` enables conversations and notifications; `preview` uses sample data. See [Chat](xivhud-chat/README.md).

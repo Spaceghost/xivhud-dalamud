@@ -7,7 +7,7 @@ public sealed record HudCommand(string Method, JsonElement Parameters);
 /// <summary>Pure, shared validation. No input injection, game actions, or controller leases.</summary>
 public static class HudCommands
 {
-    public static readonly string[] Modules = ["hud", "journal", "character", "vitals", "combat"];
+    public static readonly string[] Modules = ["hud", "journal", "character", "vitals", "combat", "chat"];
     public static readonly string[] Modes = ["screen", "native_frame", "world"];
     public static readonly string[] Placements = ["Hud", "Companion", "World", "Ground"];
     public static readonly string[] Pages = ["Equipment", "Attributes", "ClassesAndJobs", "GearSets"];
@@ -17,6 +17,7 @@ public static class HudCommands
         "hud" => ["hud.set_enabled", "window.settings", "window.close", "navigator.open", "navigator.close"],
         "journal" => ["window.open", "window.close", "window.settings", "window.mode", "window.original", "journal.select", "journal.bookmark", "journal.show_map", "journal.tracker"],
         "character" => ["window.open", "window.close", "window.settings", "window.mode", "window.original", "character.page"],
+        "chat" => ["window.open", "window.close", "window.settings", "notification.push"],
         "vitals" or "combat" => ["window.open", "window.close", "window.settings"],
         _ => [],
     };
@@ -29,6 +30,7 @@ public static class HudCommands
         string[] fields = command.Method switch
         {
             "hud.set_enabled" => ["enabled"],
+            "notification.push" => ["title", "text", "kind"],
             "window.mode" => ["mode", "placement"],
             "journal.select" or "journal.show_map" => ["questId"],
             "journal.bookmark" => ["questId", "bookmarked"],
@@ -39,6 +41,12 @@ public static class HudCommands
         var seen = new HashSet<string>(StringComparer.Ordinal);
         foreach (var field in p.EnumerateObject())
             if (!fields.Contains(field.Name) || !seen.Add(field.Name)) return "unknown_or_duplicate_parameter";
+        if (command.Method == "notification.push")
+        {
+            if (!p.TryGetProperty("title", out var title) || title.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(title.GetString()) || title.GetString()!.Length > 100) return "invalid_notification_title";
+            if (!p.TryGetProperty("text", out var text) || text.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(text.GetString()) || text.GetString()!.Length > 1000) return "invalid_notification_text";
+            if (!Choice(p, "kind", ["Info", "Message", "Quest", "Error"])) return "invalid_notification_kind";
+        }
         if (command.Method == "hud.set_enabled" && !Boolean(p, "enabled")) return "enabled_must_be_boolean";
         if (command.Method == "window.mode")
         {

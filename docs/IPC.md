@@ -46,3 +46,18 @@ Vitals 0.1.0.1 adds an `effects` diagnostic object: `playerEnabled`, `targetEnab
 names, status IDs, durations, sources and actor identities are not exported.
 
 Vitals `autoArrange` reports automatic group placement versus saved manual anchors.
+
+## Combat and chat development modules
+
+`XivHud.Combat.v1.Call` provides cached status and queued `window.open`,
+`window.close`, `window.settings`. It never exposes hotbar execution.
+
+`XivHud.Chat.v1.Call` provides the same window controls plus `notification.push`:
+`{"title":"Build complete","text":"Your local build finished.","kind":"Info"}`.
+Title is required (up to 100 characters); text is required (up to 1000 characters);
+kind is one of `Info`, `Message`, `Quest`, `Error`. Normal request/result polling
+applies. Disabled capture or muted notifications refuse the operation with
+`notifications_disabled`. This posts only a local card/inbox item, never an
+outbound chat message. Status exposes counts, not chat contents or recipients.
+There is no `chat.send` capability. Native game input requires a local explicit
+composer action with character and age checks.
