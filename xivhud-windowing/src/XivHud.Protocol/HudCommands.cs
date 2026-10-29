@@ -7,7 +7,7 @@ public sealed record HudCommand(string Method, JsonElement Parameters);
 /// <summary>Pure, shared validation. No input injection, game actions, or controller leases.</summary>
 public static class HudCommands
 {
-    public static readonly string[] Modules = ["hud", "journal", "character", "vitals", "combat", "chat"];
+    public static readonly string[] Modules = ["hud", "journal", "character", "vitals", "combat", "chat", "inventory", "crafting"];
     public static readonly string[] Modes = ["screen", "native_frame", "world"];
     public static readonly string[] Placements = ["Hud", "Companion", "World", "Ground"];
     public static readonly string[] Pages = ["Equipment", "Attributes", "ClassesAndJobs", "GearSets"];
@@ -18,7 +18,7 @@ public static class HudCommands
         "journal" => ["window.open", "window.close", "window.settings", "window.mode", "window.original", "journal.select", "journal.bookmark", "journal.show_map", "journal.tracker"],
         "character" => ["window.open", "window.close", "window.settings", "window.mode", "window.original", "character.page"],
         "chat" => ["window.open", "window.close", "window.settings", "notification.push"],
-        "vitals" or "combat" => ["window.open", "window.close", "window.settings"],
+        "vitals" or "combat" or "inventory" or "crafting" => ["window.open", "window.close", "window.settings"],
         _ => [],
     };
 

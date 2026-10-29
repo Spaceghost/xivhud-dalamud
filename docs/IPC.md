@@ -61,3 +61,14 @@ applies. Disabled capture or muted notifications refuse the operation with
 outbound chat message. Status exposes counts, not chat contents or recipients.
 There is no `chat.send` capability. Native game input requires a local explicit
 composer action with character and age checks.
+
+## Inventory and Crafting
+
+`XivHud.Inventory.v1.Call` and `XivHud.Crafting.v1.Call` use the same version-one
+request/result envelope with module ids `inventory` and `crafting`. Both expose
+`api.version`, `status`, `request.status`, `window.open`, `window.close` and
+`window.settings`; window operations accept an empty parameter object and queue
+for the framework thread. Settings opens the primary screen surface. No world
+placement, item mutations or crafting actions are supported. Snapshots report
+readiness, login state, binding support, loaded-bag count, preview and window
+state; no inventory contents, worklist or player identity is exposed.

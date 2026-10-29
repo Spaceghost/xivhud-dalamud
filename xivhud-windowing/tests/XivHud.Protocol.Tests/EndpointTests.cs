@@ -4,6 +4,21 @@ using XivHud.Protocol;
 public class EndpointTests
 {
     [Theory]
+    [InlineData("inventory")]
+    [InlineData("crafting")]
+    public void ItemModulesQueueOnlyScreenUiControls(string module)
+    {
+        using var endpoint = new HudEndpoint(module);
+        foreach (var method in new[] { "window.open", "window.close", "window.settings" })
+            Assert.True(Reply(endpoint, Request(method)).GetProperty("ok").GetBoolean());
+        foreach (var method in new[] { "item.use", "craft.start", "window.mode", "hud.set_enabled" })
+            Assert.False(Reply(endpoint, Request(method)).GetProperty("ok").GetBoolean());
+        Assert.False(Reply(endpoint, Request("window.open", new { enabled = true })).GetProperty("ok").GetBoolean());
+        var applied = new List<string>(); endpoint.Process(c => { applied.Add(c.Method); return null; });
+        Assert.Equal(new[] { "window.open", "window.close", "window.settings" }, applied);
+    }
+
+    [Theory]
     [InlineData("{\"enabled\":true,\"locked\":true,\"filter\":\"bookmarks\",\"limit\":5}", true)]
     [InlineData("{\"enabled\":false}", true)]
     [InlineData("{\"enabled\":true,\"filter\":\"all\"}", false)]

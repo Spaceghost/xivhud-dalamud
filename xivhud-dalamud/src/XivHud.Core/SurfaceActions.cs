@@ -24,7 +24,7 @@ public static class SurfaceActions
             var pin = action switch { "companion" => "pet", "world" => "here", "hud" => "hud", "ground" => "ground", _ => null };
             return pin is null ? [] : [Request("ghostty", "panel.place", new { id = surface.PanelId.Value, pin })];
         }
-        if (surface.Id != "module:" + surface.Owner || surface.Owner is not ("hud" or "journal" or "character" or "vitals" or "combat" or "chat")) return [];
+        if (surface.Id != "module:" + surface.Owner || surface.Owner is not ("hud" or "journal" or "character" or "vitals" or "combat" or "chat" or "inventory" or "crafting")) return [];
         if (action == "settings" || surface.Owner == "hud" && action == "open")
             return [Request(surface.Owner, "window.settings")];
         if (action == "open") return [Request(surface.Owner, "window.open")];

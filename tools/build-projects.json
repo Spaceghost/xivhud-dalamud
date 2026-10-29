@@ -6,7 +6,9 @@
     "xivhud-character/src/XivHud.Character/XivHud.Character.csproj",
     "xivhud-vitals/src/XivHud.Vitals/XivHud.Vitals.csproj",
     "xivhud-combat/src/XivHud.Combat/XivHud.Combat.csproj",
-    "xivhud-chat/src/XivHud.Chat/XivHud.Chat.csproj"
+    "xivhud-chat/src/XivHud.Chat/XivHud.Chat.csproj",
+    "xivhud-inventory/src/XivHud.Inventory/XivHud.Inventory.csproj",
+    "xivhud-crafting/src/XivHud.Crafting/XivHud.Crafting.csproj"
   ],
   "packages": [
     {
@@ -71,6 +73,26 @@
         "XivHud.Chat.Core.dll",
         "XivHud.Protocol.dll"
       ]
+    },
+    {
+      "project": "XivHud.Inventory",
+      "manifest": "xivhud-inventory/src/XivHud.Inventory/XivHud.Inventory.json",
+      "installer": false,
+      "required": [
+        "XivHud.Items.Core.dll",
+        "XivHud.Items.Dalamud.dll",
+        "XivHud.Protocol.dll"
+      ]
+    },
+    {
+      "project": "XivHud.Crafting",
+      "manifest": "xivhud-crafting/src/XivHud.Crafting/XivHud.Crafting.json",
+      "installer": false,
+      "required": [
+        "XivHud.Items.Core.dll",
+        "XivHud.Items.Dalamud.dll",
+        "XivHud.Protocol.dll"
+      ]
     }
   ],
   "tests": [
@@ -82,6 +104,7 @@
     "xivhud-windowing/tests/XivHud.NativeWindowing.Tests/XivHud.NativeWindowing.Tests.csproj",
     "xivhud-vitals/tests/XivHud.Vitals.Tests/XivHud.Vitals.Tests.csproj",
     "xivhud-combat/tests/XivHud.Combat.Tests/XivHud.Combat.Tests.csproj",
-    "xivhud-chat/tests/XivHud.Chat.Tests/XivHud.Chat.Tests.csproj"
+    "xivhud-chat/tests/XivHud.Chat.Tests/XivHud.Chat.Tests.csproj",
+    "xivhud-items/tests/XivHud.Items.Tests/XivHud.Items.Tests.csproj"
   ]
 }

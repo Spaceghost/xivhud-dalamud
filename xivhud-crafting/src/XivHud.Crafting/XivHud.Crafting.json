@@ -1,0 +1,19 @@
+{
+  "Author": "Johnneylee Jack Rollins",
+  "Name": "XivHud \u00b7 Crafting",
+  "InternalName": "XivHud.Crafting",
+  "AssemblyVersion": "0.1.0.0",
+  "Punchline": "Plan crafts and materials.",
+  "Description": "Development module for the shared illustrated UI. Native game windows remain available.",
+  "ApplicableVersion": "any",
+  "DalamudApiLevel": 15,
+  "RepoUrl": "https://github.com/Spaceghost/xivhud-dalamud",
+  "Tags": [
+    "hud",
+    "crafting",
+    "development"
+  ],
+  "LoadRequiredState": 0,
+  "LoadSync": false,
+  "CanUnloadAsync": false
+}

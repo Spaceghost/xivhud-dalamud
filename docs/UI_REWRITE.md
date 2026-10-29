@@ -65,3 +65,18 @@ lease-expiry tests; this new window still needs physical controller and in-game
 visual acceptance. The build and tests do not launch FFXIV.
 
 A manual Combat development module now implements the saved-bar deck and generic job-resource readings. This is the combat-first slice; live acceptance and bespoke job visuals remain. The subsequent Chat module implements session conversations, explicit sending, toast/tell cards and a notification inbox. Both remain development modules pending live acceptance.
+
+## Items and crafting slice
+
+Inventory now supplies searchable carried bags, HQ filtering, stack locations,
+local item icons and item details. Crafting supplies a local recipe catalogue,
+discipline and ingredient search, and a session worklist with aggregated material
+requirements and carried-bag comparison. Both are separate plugins discoverable
+through the shared navigator and exposed through queued UI-only IPC.
+
+This fills the first inventory and crafting-planning slices. Native item actions,
+rich tooltips/comparison, additional storage, recipe-unlock evaluation, crafting
+progress, gathering/navigation and persistent per-character worklists remain.
+Owned/missing quantities are unknown until all carried bags load; crystals remain
+unknown because their container is outside the scan. New modules do not hide any
+native UI and have no live acceptance yet.

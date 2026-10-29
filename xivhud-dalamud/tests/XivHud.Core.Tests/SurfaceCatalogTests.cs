@@ -5,6 +5,18 @@ namespace XivHud.Core.Tests;
 
 public sealed class SurfaceCatalogTests
 {
+    [Theory]
+    [InlineData("inventory")]
+    [InlineData("crafting")]
+    public void ItemModulesUseQueuedScreenControls(string module)
+    {
+        var row = SurfaceCatalog.Read(new Dictionary<string, string?> { [module] = Module(module) }, null, Now).Single(x => x.Id == "module:" + module);
+        Assert.True(row.Available);
+        Assert.Equal("window.open", Assert.Single(SurfaceActions.Create(row, "open")).Method);
+        Assert.Equal("window.settings", Assert.Single(SurfaceActions.Create(row, "settings")).Method);
+        Assert.Empty(SurfaceActions.Create(row, "world"));
+    }
+
     private static readonly DateTimeOffset Now = DateTimeOffset.Parse("2026-10-28T20:00:00Z");
     private static string Module(string module, object? state = null, DateTimeOffset? observed = null) => JsonSerializer.Serialize(new { ok = true, result = new { module, observedAt = observed ?? Now, state = state ?? new { ready = true, window = new { open = true, focused = true, actualMode = "world" } } } });
     private static string Panels(params object[] panels) => JsonSerializer.Serialize(new { ok = true, result = new { panels } });
@@ -179,7 +191,7 @@ public sealed class SurfaceCatalogTests
         var requests = new List<string>();
         var session = new NavigatorSession((owner, request) => { requests.Add(request); return owner == "ghostty" ? Panels() : Module(owner); });
         session.Refresh(Now);
-        Assert.Equal(7, requests.Count);
+        Assert.Equal(9, requests.Count);
         Assert.All(requests, r => Assert.Contains(JsonDocument.Parse(r).RootElement.GetProperty("method").GetString(), new[] { "status", "panel.list" }));
     }
     [Fact]
