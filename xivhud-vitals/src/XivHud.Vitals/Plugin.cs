@@ -67,7 +67,8 @@ public sealed class Plugin : IDalamudPlugin
     private void OnCommand(string command, string arguments) => Enqueue(arguments.Trim().ToLowerInvariant());
     private void Logout(int type, int code) => feed.Reset();
     private bool CanRead => client.IsLoggedIn && !gameGui.GameUiHidden && !condition[ConditionFlag.BetweenAreas] && !condition[ConditionFlag.BetweenAreas51]
-        && !condition[ConditionFlag.WatchingCutscene] && !condition[ConditionFlag.WatchingCutscene78] && !condition[ConditionFlag.OccupiedInCutSceneEvent];
+        && !condition[ConditionFlag.WatchingCutscene] && !condition[ConditionFlag.WatchingCutscene78] && !condition[ConditionFlag.OccupiedInCutSceneEvent]
+        && !condition[ConditionFlag.OccupiedInEvent] && !condition[ConditionFlag.OccupiedInQuestEvent];
 
     private void Apply(string request)
     {

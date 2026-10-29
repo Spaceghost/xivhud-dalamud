@@ -169,6 +169,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
                 && !condition[ConditionFlag.BetweenAreas] && !condition[ConditionFlag.BetweenAreas51]
                 && !condition[ConditionFlag.WatchingCutscene] && !condition[ConditionFlag.WatchingCutscene78]
                 && !condition[ConditionFlag.OccupiedInCutSceneEvent]
+                && !condition[ConditionFlag.OccupiedInEvent] && !condition[ConditionFlag.OccupiedInQuestEvent]
                 && unavailable is null && Environment.TickCount64 - lastRead <= 2000); }
             catch (Exception e) { config.TrackerEnabled = false; log.Error(e, "Journal tracker drawing stopped for this session; the quest book remains available."); }
             PublishStatus();
