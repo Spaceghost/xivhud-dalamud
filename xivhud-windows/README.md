@@ -15,11 +15,13 @@ is automatic, and no window placements are persisted in this first version.
 ## Following and orbiting
 
 Follow me is the default companion placement (`pet`). It uses Ghostty's pet
-motion tuning: 2.3-unit radius, shoulder-height placement, stiffness 5 and damping
+motion tuning: 2.3-unit radius and default width, shoulder-height placement, stiffness 5 and damping
 0.95, alternating side slots, a running-back bias and softer springs for later
 windows. It trails your movement and eases around your character as you turn.
 Turning the camera does not move its world position. Idle character turns leave
 its slot in place, avoiding a window that runs away as you turn to read it.
+A companion outside the camera stays hosted until it comes back into view, rather
+than flashing its ordinary screen window. Screen recovery remains available.
 The bounded spring is integrated in steps of at most 1/120 second, with a 0.1-second
 hitch bound, a personal-space guard and reset on teleport/zone changes.
 

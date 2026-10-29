@@ -24,7 +24,7 @@ public sealed unsafe class Plugin : IAsyncDalamudPlugin
         public readonly uint Zone = zone;
         public Vector3 Anchor = anchor;
         public string Placement = "pet";
-        public float Width = 1.2f;
+        public float Width = 2.3f;
         public readonly CompanionMotion Motion = new();
         public readonly Dictionary<uint, bool> MouseFlags = [];
         public IDrawListTextureWrap? Texture;
@@ -288,7 +288,10 @@ public sealed unsafe class Plugin : IAsyncDalamudPlugin
                 if (!item.MouseDisabled) { item.OriginalFlags = root.Flags; item.MouseDisabled = true; }
                 if (!root.Active || root.Hidden || !Allowed) { item.Captured = false; root.Flags |= ImGuiWindowFlags.NoMouseInputs; continue; }
                 item.Position = root.Pos; item.Size = root.Size;
-                if (!item.Visible || !item.Quad.Valid) { item.Captured = false; item.Status = "Screen fallback · placement unavailable"; RestoreFlags(item); continue; }
+                // A companion can orbit outside the camera. Keep its source hosted there,
+                // rather than flashing the ordinary window at its old screen position.
+                var followingOutsideView = item.Placement is "pet" or "orbit";
+                if ((!item.Visible || !item.Quad.Valid) && !followingOutsideView) { item.Captured = false; item.Status = "Screen fallback · placement unavailable"; RestoreFlags(item); continue; }
                 var captured = NativeWindowCapture.DrawExpanded(item.Name, frame =>
                 {
                     item.Position = frame.Data->DisplayPos; item.Size = frame.Data->DisplaySize;
@@ -298,7 +301,7 @@ public sealed unsafe class Plugin : IAsyncDalamudPlugin
                     item.Texture.Draw(new ImDrawDataPtr(frame.Data)); return true;
                 });
                 item.Captured = captured;
-                item.Status = captured ? "Floating · no terminal" : "Waiting for content";
+                item.Status = captured ? (item.Visible ? "Floating · no terminal" : "Following · outside view") : "Waiting for content";
                 VisitOwned(item, w => { item.MouseFlags.TryAdd(w.ID, (w.Flags & ImGuiWindowFlags.NoMouseInputs) != 0); w.Flags |= ImGuiWindowFlags.NoMouseInputs; });
                 root.Flags |= ImGuiWindowFlags.NoMove;
             }
