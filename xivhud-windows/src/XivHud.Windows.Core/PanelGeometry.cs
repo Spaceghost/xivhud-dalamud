@@ -31,7 +31,7 @@ public static class WindowIdentity
     public static bool Valid(string? name) => name is { Length: > 0 and <= 512 } && name == name.Trim() && !name.Any(char.IsControl)
         && !name.StartsWith("##", StringComparison.Ordinal) && (!name.Contains("###", StringComparison.Ordinal) || name.IndexOf("###", StringComparison.Ordinal) + 3 < name.Length);
     public static string Key(string name) => name.Contains("###", StringComparison.Ordinal) ? name[(name.IndexOf("###", StringComparison.Ordinal) + 3)..] : name;
-    public static readonly string[] Placements = ["pet", "hud", "here", "ground"];
+    public static readonly string[] Placements = ["pet", "orbit", "hud", "here", "ground"];
 }
 
 public static class WindowLayout

@@ -25,6 +25,7 @@ public sealed unsafe class Plugin : IAsyncDalamudPlugin
         public Vector3 Anchor = anchor;
         public string Placement = "pet";
         public float Width = 1.2f;
+        public readonly CompanionMotion Motion = new();
         public readonly Dictionary<uint, bool> MouseFlags = [];
         public IDrawListTextureWrap? Texture;
         public Vector2 Position, Size, OriginalPosition, OriginalSize;
@@ -43,6 +44,7 @@ public sealed unsafe class Plugin : IAsyncDalamudPlugin
     private readonly IGameGui game;
     private readonly ITextureProvider textures;
     private readonly IPluginLog log;
+    private readonly Configuration config;
     private readonly List<Panel> panels = [];
     private readonly ConcurrentQueue<(long Id, string Method, string Name, int PanelId, string Placement)> pending = new();
     private readonly Dictionary<long, object> results = [];
@@ -70,6 +72,7 @@ public sealed unsafe class Plugin : IAsyncDalamudPlugin
         ICondition condition, IGameGui game, ITextureProvider textures, IPluginLog log, IFramework framework)
     {
         this.pi = pi; this.commands = commands; this.client = client; this.objects = objects;
+        this.config = pi.GetPluginConfig() as Configuration ?? new Configuration();
         this.framework = framework; this.condition = condition; this.game = game; this.textures = textures; this.log = log;
         renderHook = Render; inputHook = Input;
         call = pi.GetIpcProvider<string, string>("XivHud.Windows.v1.Call");
@@ -187,7 +190,7 @@ public sealed unsafe class Plugin : IAsyncDalamudPlugin
                             if (root.IsNull) throw new InvalidOperationException("Source window is not drawn yet");
                             ImGuiP.FocusWindow(root); focused = panel.Id;
                         }
-                        else { panel.Placement = op.Placement; if (objects.LocalPlayer is { } local) panel.Anchor = local.Position + new Vector3(0, .6f, 0); }
+                        else { if (panel.Placement != op.Placement) panel.Motion.Reset(); panel.Placement = op.Placement; if (objects.LocalPlayer is { } local) panel.Anchor = local.Position + new Vector3(0, .6f, 0); }
                         break;
                 }
                 results[op.Id] = new { request = op.Id, ok = true };
@@ -221,18 +224,19 @@ public sealed unsafe class Plugin : IAsyncDalamudPlugin
         try
         {
             EnsureHooks(); Process();
-            if (zone != client.TerritoryType) { foreach (var item in panels.ToArray()) if (item.Placement is "here" or "ground") Release(item); zone = client.TerritoryType; }
-            foreach (var item in panels) { item.Visible = Allowed && Project(item); if (item.Visible && item.Texture is { } texture && item.Captured) DrawPanel(item, texture); }
+            if (zone != client.TerritoryType) { foreach (var item in panels.ToArray()) if (item.Placement is "here" or "ground") Release(item); else item.Motion.Reset(); zone = client.TerritoryType; }
+            var companionOrder = 0;
+            foreach (var item in panels) { var order = item.Placement is "pet" or "orbit" ? companionOrder++ : 0; item.Visible = Allowed && Project(item, order); if (item.Visible && item.Texture is { } texture && item.Captured) DrawPanel(item, texture); }
             var nav = ImGui.GetCurrentContext().NavWindow;
             if (focused != 0 && !panels.Any(p => { var root = ImGuiP.FindWindowByName(p.Name); return p.Id == focused && !root.IsNull && !nav.IsNull && (nav == root || nav.RootWindow == root || nav.RootWindowPopupTree == root); })) focused = 0;
             if (open) Manager();
             snapshot = JsonSerializer.Serialize(new { version = 1, module = "windows", observedAt = DateTimeOffset.UtcNow,
                 state = new { ready = true, loggedIn = client.IsLoggedIn, terminals = 0, count = panels.Count, window = new { open, actualMode = "screen", requestedMode = "screen" }, recoveryCommand = "/xivwindows screen" } });
-            panelSnapshot = JsonSerializer.Serialize(new { panels = panels.Select(i => new { id = i.Id, kind = "adopted", app = i.Name, title = i.Name.Split("###")[0], view = i.Placement == "pet" ? "world" : i.Placement, focused = focused == i.Id, presented = i.Visible && i.Captured, sourcePosition = new[] { i.Position.X, i.Position.Y }, sourceSize = new[] { i.Size.X, i.Size.Y }, status = i.Status }), requests = results.Values.ToArray() });
+            panelSnapshot = JsonSerializer.Serialize(new { panels = panels.Select(i => new { id = i.Id, kind = "adopted", app = i.Name, title = i.Name.Split("###")[0], view = i.Placement == "pet" ? "world" : i.Placement, focused = focused == i.Id, presented = i.Visible && i.Captured, sourcePosition = new[] { i.Position.X, i.Position.Y }, sourceSize = new[] { i.Size.X, i.Size.Y }, status = i.Status, worldPosition = new[] { i.Motion.Position.X, i.Motion.Position.Y, i.Motion.Position.Z } }), requests = results.Values.ToArray() });
         }
         catch (Exception e) { message = e.Message; log.Warning(e, "Floating windows frame failed; recovering screen windows"); foreach (var item in panels.ToArray()) Release(item); }
     }
-    private bool Project(Panel item)
+    private bool Project(Panel item, int companionOrder)
     {
         if (item.Size.X < 32 || item.Size.Y < 32) return false;
         var viewport = ImGui.GetMainViewport();
@@ -244,14 +248,18 @@ public sealed unsafe class Plugin : IAsyncDalamudPlugin
             item.Quad = new(a, a + new Vector2(size.X, 0), a + size, a + new Vector2(0, size.Y)); return true;
         }
         if (objects.LocalPlayer is not { } player) return false;
-        var center = item.Placement == "pet" ? player.Position + new Vector3(0, .6f, 0) : item.Anchor;
+        var companion = item.Placement is "pet" or "orbit";
+        var held = focused == item.Id || (item.Visible && item.Quad.TryUv(realMouse, out _));
+        var center = companion
+            ? item.Motion.Update(player.Position, player.Rotation, ImGui.GetIO().DeltaTime, companionOrder,
+                item.Width, height, held, item.Placement == "orbit", config.ReduceMotion)
+            : item.Anchor;
         var horizontal = Vector3.UnitX;
         if (game.WorldToScreen(center, out var middle, out _) && game.WorldToScreen(center + Vector3.UnitX, out var x, out _) && game.WorldToScreen(center + Vector3.UnitZ, out var z, out _))
         {
             var axis = new Vector3(x.X - middle.X, 0, z.X - middle.X);
             if (axis.LengthSquared() > .001f) horizontal = Vector3.Normalize(axis);
         }
-        if (item.Placement == "pet") center += horizontal * (.7f + (item.Id - 1) % 3 * .35f);
         var right = horizontal * item.Width / 2;
         var up = item.Placement == "ground" ? new Vector3(-right.Z, 0, right.X) * height / item.Width : new Vector3(0, height / 2, 0);
         if (item.Placement == "ground") center.Y = player.Position.Y + .05f;
@@ -366,7 +374,9 @@ public sealed unsafe class Plugin : IAsyncDalamudPlugin
         {
             if (!drew) return;
             ImGui.TextColored(V(PaleGold), "FLOATING WINDOWS");
-            ImGui.TextWrapped("Select an open plugin window. Float it without Ghostty or a terminal. Use Screen to recover it.");
+            ImGui.TextWrapped("Select an open plugin window. Follow me trails on springs like Ghostty companion windows; Orbit circles slowly. Use Screen to recover it.");
+            var reduceMotion = config.ReduceMotion;
+            if (ImGui.Checkbox("Reduce motion", ref reduceMotion)) { config.ReduceMotion = reduceMotion; pi.SavePluginConfig(config); }
             if (Environment.TickCount64 >= nextList)
             {
                 nextList = Environment.TickCount64 + 1000;
@@ -384,7 +394,7 @@ public sealed unsafe class Plugin : IAsyncDalamudPlugin
                 ImGui.PushID(item.Id);
                 ImGui.TextUnformatted(item.Name.Split("###")[0]);
                 ImGui.TextDisabled(item.Status);
-                foreach (var (label, pin) in new[] { ("Beside me", "pet"), ("View", "hud"), ("Here", "here"), ("Ground", "ground") })
+                foreach (var (label, pin) in new[] { ("Follow me", "pet"), ("Orbit", "orbit"), ("View", "hud"), ("Here", "here"), ("Ground", "ground") })
                 { if (ImGui.SmallButton(label)) Enqueue("panel.place", id: item.Id, placement: pin); ImGui.SameLine(); }
                 if (ImGui.SmallButton("Screen")) Enqueue("release", item.Name);
                 ImGui.SliderFloat("Width (world units)", ref item.Width, .5f, 6);

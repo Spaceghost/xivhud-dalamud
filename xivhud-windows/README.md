@@ -6,11 +6,29 @@ belongs to its original plugin; this module owns only capture, placement and
 pointer mapping. It creates zero terminal sessions.
 
 Open `/xivwindows`, choose an open source window and select **Float selected**.
-Choose **Beside me**, **View**, **Here** or **Ground**. **Screen** restores one
+Choose **Follow me**, **Orbit**, **View**, **Here** or **Ground**. **Screen** restores one
 source. `/xivwindows screen` recovers every source. Explicit adoption and release
 also accept an exact window name after `/xivwindows adopt ` or `release `.
 Closing or unloading this host restores ordinary source rendering and a visible source position. No adoption
 is automatic, and no window placements are persisted in this first version.
+
+## Following and orbiting
+
+Follow me is the default companion placement (`pet`). It uses Ghostty's pet
+motion tuning: 2.3-unit radius, shoulder-height placement, stiffness 5 and damping
+0.95, alternating side slots, a running-back bias and softer springs for later
+windows. It trails your movement and eases around your character as you turn.
+Turning the camera does not move its world position. Idle character turns leave
+its slot in place, avoiding a window that runs away as you turn to read it.
+The bounded spring is integrated in steps of at most 1/120 second, with a 0.1-second
+hitch bound, a personal-space guard and reset on teleport/zone changes.
+
+Orbit (`orbit`) continuously circles at 0.25 radians/second. Hovering or focusing
+it pauses the orbit and eases out the small idle bob; follow movement still works.
+The persisted **Reduce motion** setting removes trailing, bob and automatic orbit.
+Use `/xivwindows place ID pet` or `orbit`, or the manager's buttons. Existing View,
+Here and Ground placements are unchanged. This ports the companion motion, not
+Ghostty's wall collision, panel curvature, scene shadows or depth occlusion.
 
 Capture runs at ImGui RenderPre, after all plugins have drawn. It includes the
 selected root, children and owned popup trees, submits one draw-list texture,
