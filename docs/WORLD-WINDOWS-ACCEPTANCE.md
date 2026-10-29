@@ -1,6 +1,6 @@
 # Independent floating-window acceptance
 
-The family builds against its reviewed Dalamud references. All 548 tests across
+The family builds against its reviewed Dalamud references. All 559 tests across
 11 offline suites passed on 2026-10-29. The eight optional Umbra adapters build
 against installed Umbra 3.1.18.0. Locked builds complete without warnings.
 
@@ -52,3 +52,27 @@ records. They are also published on the UI family site.
 
 No physical-controller, depth-occlusion or cross-device export acceptance is
 implied by the offline results. A phone/other-computer viewer is not implemented.
+
+## Ghostty-style companion motion — 0.1.0.6
+
+Follow me now uses Ghostty's companion spring tuning instead of attaching a panel
+to camera-right. Running produces trailing and a backward slot bias; turning while
+moving eases the window around the character. Idle facing changes retain the slot.
+Orbit adds continuous circling, paused on hover/focus. Reduce motion is persisted.
+Companions outside the camera stay hosted rather than flashing a screen fallback.
+
+The 25 Windows tests include eleven new motion cases: trailing and settling,
+turning without passing through the character, stable idle heading, ordered side
+slots, orbit and reading pause, consistency at 30/60/144 fps, teleport/zone resets,
+reduced motion and invalid/hitched frame timing. Full family CI passes 559 tests.
+
+Version 0.1.0.6 was installed and verified loaded. The [recorded motion clip](screenshots/companion-motion.webm)
+shows brief forward/back movement and then Orbit; it is a real 31.8-second game
+capture, downscaled to 1280×720 without audio. The [orbit screenshot](screenshots/companion-orbit.png)
+records the same build. The camera was zoomed out for framing. Ghostty retained
+its two existing sessions; the standalone host reported zero terminals. Follow me
+was restored after recording, along with Combat, Vitals and the quest tracker.
+
+This change matches the companion motion tuning. Ghostty's curved panels,
+world-collision reactions, depth occlusion and other presentation effects have
+not been ported to the standalone host.

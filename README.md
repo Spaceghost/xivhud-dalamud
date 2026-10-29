@@ -56,7 +56,7 @@ Full module documentation: [HUD](xivhud-dalamud/README.md), [Journal](xivhud-jou
 
 [XivMcp](https://github.com/Spaceghost/xivmcp-dalamud) discovers the modules independently, reads immutable snapshots and capabilities, and exposes explicitly approved UI controls. Reads never open a window or acquire controller input. UI requests are queued for the framework thread; poll their result and then inspect actual window state. The remote Character page control never equips gear. See [IPC contract](docs/IPC.md).
 
-All 548 tests across eleven offline suites pass. The nine modules and eight optional Umbra adapters also loaded in game. Standalone Journal hosting and popups, Inventory clicks and beside-character placement, screen recovery, and Crafting worklists were checked live. See the [acceptance record and screenshots](docs/WORLD-WINDOWS-ACCEPTANCE.md) for evidence and remaining limits. Character remains a development build pending its broader native, data and physical-controller acceptance.
+All 559 tests across eleven offline suites pass. The nine modules and eight optional Umbra adapters also loaded in game. Standalone Journal hosting and popups, Inventory clicks and beside-character placement, screen recovery, and Crafting worklists were checked live. See the [acceptance record and screenshots](docs/WORLD-WINDOWS-ACCEPTANCE.md) for evidence and remaining limits. Character remains a development build pending its broader native, data and physical-controller acceptance.
 
 ![Inventory beside the character, hosted without a terminal](docs/screenshots/inventory-companion.png)
 
@@ -113,3 +113,8 @@ Inventory, Crafting and Floating Windows. Build them with
 as separate release assets. The content modules remain independently loadable
 Dalamud plugins and do not require Umbra. See [Floating Windows](xivhud-windows/README.md)
 and the [acceptance record](docs/WORLD-WINDOWS-ACCEPTANCE.md).
+
+
+Floating companions now trail and settle on Ghostty-style springs and ease around
+you while turning. Choose **Follow me** or **Orbit** in `/xivwindows`.
+[Watch the recorded game motion](docs/screenshots/companion-motion.webm).
