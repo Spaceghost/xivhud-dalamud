@@ -4,7 +4,8 @@
     "xivhud-dalamud/src/XivHud.Plugin/XivHud.Plugin.csproj",
     "xivhud-journal/src/XivHud.Journal/XivHud.Journal.csproj",
     "xivhud-character/src/XivHud.Character/XivHud.Character.csproj",
-    "xivhud-vitals/src/XivHud.Vitals/XivHud.Vitals.csproj"
+    "xivhud-vitals/src/XivHud.Vitals/XivHud.Vitals.csproj",
+    "xivhud-combat/src/XivHud.Combat/XivHud.Combat.csproj"
   ],
   "packages": [
     {
@@ -50,6 +51,16 @@
         "XivHud.Vitals.Core.dll",
         "XivHud.Protocol.dll"
       ]
+    },
+    {
+      "project": "XivHud.Combat",
+      "manifest": "xivhud-combat/src/XivHud.Combat/XivHud.Combat.json",
+      "installer": false,
+      "required": [
+        "XivHud.Combat.Core.dll",
+        "XivHud.Vitals.Core.dll",
+        "XivHud.Protocol.dll"
+      ]
     }
   ],
   "tests": [
@@ -59,6 +70,7 @@
     "xivhud-windowing/tests/XivHud.Protocol.Tests/XivHud.Protocol.Tests.csproj",
     "xivhud-windowing/tests/XivHud.Windowing.Tests/XivHud.Windowing.Tests.csproj",
     "xivhud-windowing/tests/XivHud.NativeWindowing.Tests/XivHud.NativeWindowing.Tests.csproj",
-    "xivhud-vitals/tests/XivHud.Vitals.Tests/XivHud.Vitals.Tests.csproj"
+    "xivhud-vitals/tests/XivHud.Vitals.Tests/XivHud.Vitals.Tests.csproj",
+    "xivhud-combat/tests/XivHud.Combat.Tests/XivHud.Combat.Tests.csproj"
   ]
 }

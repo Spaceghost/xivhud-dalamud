@@ -18,6 +18,14 @@ public class EndpointTests
     }
 
     [Fact]
+    public void CombatEndpointCannotTriggerHotbarActions()
+    {
+        using var endpoint = new HudEndpoint("combat");
+        Assert.False(Reply(endpoint, Request("action.execute", new { bar = 1, slot = 1 })).GetProperty("ok").GetBoolean());
+        Assert.True(Reply(endpoint, Request("window.open")).GetProperty("ok").GetBoolean());
+    }
+
+    [Fact]
     public void NavigatorOpenIsQueuedWithoutChangingHudVisibility()
     {
         using var endpoint = new HudEndpoint("hud");

@@ -46,7 +46,7 @@ internal sealed class NavigatorWindow
             return pi.GetIpcSubscriber<string, string>(owner switch
             {
                 "hud" => "XivHud.v1.Call", "journal" => "XivHud.Journal.v1.Call", "character" => "XivHud.Character.v1.Call",
-                "vitals" => "XivHud.Vitals.v1.Call", "ghostty" => "GhosttyDalamud.v1.Call", _ => throw new ArgumentOutOfRangeException(nameof(owner)),
+                "vitals" => "XivHud.Vitals.v1.Call", "combat" => "XivHud.Combat.v1.Call", "ghostty" => "GhosttyDalamud.v1.Call", _ => throw new ArgumentOutOfRangeException(nameof(owner)),
             }).InvokeFunc(request);
         }, () => pi.InstalledPlugins.Select(p => new PluginUiInfo(p.InternalName, p.Name, p.IsLoaded, p.HasMainUi, p.HasConfigUi)).ToArray());
     }

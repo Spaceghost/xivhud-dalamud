@@ -33,7 +33,7 @@ never open windows, enable modules or alter native HUD visibility. Stale HUD
 snapshots cannot trigger an action. Unsupported modules keep their own window
 controls and can be added through future surface-provider contracts.
 
-## Next playable slice: combat actions
+## Current implementation order: combat, then chat and notifications
 
 Vitals supplies passive player, target, focus and party information. The next
 major replacement is the action layer: hotbar content, cooldown and charge
@@ -63,3 +63,5 @@ operation handling have offline tests. The family is built against the reviewed
 Dalamud references. Controller policy already has neutral-entry, focus-loss and
 lease-expiry tests; this new window still needs physical controller and in-game
 visual acceptance. The build and tests do not launch FFXIV.
+
+A manual Combat development module now implements the saved-bar deck and generic job-resource readings. This is the combat-first slice; live acceptance and bespoke job visuals remain. Chat and notifications are next in the requested order.

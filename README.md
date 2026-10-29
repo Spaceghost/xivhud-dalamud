@@ -1,6 +1,6 @@
 # XivHud family
 
-Four independently loadable Dalamud API 15 plugins, with shared illustration, controller and window hosting code. Source is collected here so a checkout builds the family without sibling repositories.
+Five independently loadable Dalamud API 15 plugins, with shared illustration, controller and window hosting code. Source is collected here so a checkout builds the family without sibling repositories.
 
 | Part | Purpose | Publication |
 | --- | --- | --- |
@@ -74,3 +74,5 @@ separate concerns. The normal testing catalogue still excludes development modul
 `/xivnav` opens the searchable mod shell for HUD modules, other installed mods
 and Ghostty world panels. It supports keyboard/controller selection and explicit
 focus, recovery and placement actions. See the [complete UI rewrite roadmap](docs/UI_REWRITE.md).
+
+Combat is the next UI rewrite slice: `/xivcombat` opens its settings, `open` enables the deck and `preview` shows non-interactive sample data. See [Combat](xivhud-combat/README.md). Chat and notifications follow combat.

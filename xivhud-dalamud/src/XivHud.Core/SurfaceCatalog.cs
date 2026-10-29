@@ -19,6 +19,7 @@ public static class SurfaceCatalog
         ("journal", "Journal", "Activities", 0xe0af68),
         ("character", "Character", "Character", 0xbb9af7),
         ("vitals", "Vitals", "Combat", 0x9ece6a),
+        ("combat", "Combat deck", "Combat", 0xff9e64),
         ("hud", "Interface settings", "System", 0x7dcfff),
     ];
 
@@ -106,7 +107,7 @@ public static class SurfaceCatalog
             var name = plugin.InternalName;
             if (string.IsNullOrEmpty(name) || name.Length > 128 || !name.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '_' or '-')) continue;
             if (!names.Add(name) || !plugin.MainUi && !plugin.ConfigUi) continue;
-            var module = name switch { "XivHud" => "hud", "XivHud.Journal" => "journal", "XivHud.Character" => "character", "XivHud.Vitals" => "vitals", _ => null };
+            var module = name switch { "XivHud" => "hud", "XivHud.Journal" => "journal", "XivHud.Character" => "character", "XivHud.Vitals" => "vitals", "XivHud.Combat" => "combat", _ => null };
             if (module is not null)
             {
                 if (output.Any(x => x.Id == "module:" + module && x.Available) || !plugin.Loaded) continue;
@@ -121,7 +122,7 @@ public static class SurfaceCatalog
 
     public static IReadOnlyList<UiSurface> Search(IEnumerable<UiSurface> surfaces, string query)
     {
-        var entries = surfaces.Take(MaximumPanels + MaximumPlugins + 5).ToArray();
+        var entries = surfaces.Take(MaximumPanels + MaximumPlugins + 8).ToArray();
         var words = Clean(query, 160).Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var byKey = entries.Where(x => x.Key is not null).GroupBy(x => x.Key!).ToDictionary(x => x.Key, x => x.First(), StringComparer.Ordinal);
         bool Matches(UiSurface entry)

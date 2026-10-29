@@ -14,7 +14,7 @@ public sealed class NavigatorSession(Func<string, string, string?> transport, Fu
     public void Refresh(DateTimeOffset now)
     {
         var modules = new Dictionary<string, string?>();
-        foreach (var owner in new[] { "hud", "journal", "character", "vitals" }) modules[owner] = Call(owner, "{\"method\":\"status\"}");
+        foreach (var owner in new[] { "hud", "journal", "character", "vitals", "combat" }) modules[owner] = Call(owner, "{\"method\":\"status\"}");
         Surfaces = SurfaceCatalog.Read(modules, Call("ghostty", "{\"method\":\"panel.list\"}"), now);
         if (plugins is not null)
         {
