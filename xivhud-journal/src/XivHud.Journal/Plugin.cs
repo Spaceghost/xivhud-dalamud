@@ -225,6 +225,9 @@ public sealed class Plugin : IAsyncDalamudPlugin
     {
         switch (command.Method)
         {
+            case "window.layout":
+                if (config.NativeWindowEnabled || config.WindowHostEnabled) return "screen_mode_required";
+                window.SetScreenLayout(ScreenLayout.Read(command.Parameters)); break;
             case "window.open": window.Open(); break;
             case "window.close": window.Close(); break;
             case "window.settings": window.OpenSettings(); break;

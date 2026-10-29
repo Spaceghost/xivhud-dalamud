@@ -2,7 +2,7 @@
   "Author": "Johnneylee Jack Rollins",
   "Name": "XivHud \u00b7 Combat",
   "InternalName": "XivHud.Combat",
-  "AssemblyVersion": "0.1.0.3",
+  "AssemblyVersion": "0.1.0.4",
   "Punchline": "A shared combat deck for your saved actions and job resources.",
   "Description": "Manual development combat HUD: saved hotbars, cooldowns, charges, casts, effects and job-gauge readings. Native HUD remains available.",
   "ApplicableVersion": "any",

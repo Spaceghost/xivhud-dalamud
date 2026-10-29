@@ -2,13 +2,13 @@
   <PropertyGroup>
     <AssemblyName>XivHud.Journal</AssemblyName>
     <RootNamespace>XivHud.Journal</RootNamespace>
-    <Version>0.1.0.3</Version>
+    <Version>0.1.0.4</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../xivhud-windowing/src/XivHud.Windowing.Dalamud/XivHud.Windowing.Dalamud.csproj" />
     <ProjectReference Include="../../../xivhud-windowing/src/XivHud.Windowing/XivHud.Windowing.csproj" />
-  </ItemGroup>
+  <Compile Include="../../../shared/WorkspaceLayout.cs" Link="WorkspaceLayout.cs" /></ItemGroup>
   <ItemGroup><ProjectReference Include="../../../xivhud-windowing/src/XivHud.Protocol/XivHud.Protocol.csproj" /></ItemGroup>
   <ItemGroup><Compile Include="../../../shared/IllustratedStyle.cs" Link="IllustratedStyle.cs" /></ItemGroup>
 </Project>

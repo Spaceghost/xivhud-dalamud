@@ -78,7 +78,7 @@ public sealed class Plugin : IDalamudPlugin
     private void Update(IFramework _)
     {
         if (disposed) return;
-        endpoint.Process(c => { Apply(c.Method switch { "window.open" => "open", "window.close" => "close", _ => "settings" }); return null; }, e => log.Error(e, "Combat UI request failed"));
+        endpoint.Process(c => { if (c.Method == "window.layout") { window.SetScreenLayout(ScreenLayout.Read(c.Parameters)); return null; } Apply(c.Method switch { "window.open" => "open", "window.close" => "close", _ => "settings" }); return null; }, e => log.Error(e, "Combat UI request failed"));
         for (var i = 0; i < 8 && ui.TryDequeue(out var command); i++) Apply(command);
         var now = Environment.TickCount64;
         if (!Allowed || !config.Enabled || drawFailed) { snapshot = null; actions.Clear(); }
@@ -99,7 +99,7 @@ public sealed class Plugin : IDalamudPlugin
             endpoint.Publish(new { ready = !drawFailed, loggedIn = client.IsLoggedIn, enabled = config.Enabled,
                 dataReady = Allowed && snapshot?.IsFresh(now) == true, status = window.Status, preview = window.Preview,
                 slots = snapshot?.Slots.Count ?? 0, settingsOpen = window.SettingsOpen,
-                window = new { open = config.Enabled || window.Preview, actualMode = "screen", requestedMode = "screen" }, recoveryCommand = "/xivcombat close" });
+                window = new { layout = window.Layout, open = config.Enabled || window.Preview, actualMode = "screen", requestedMode = "screen" }, recoveryCommand = "/xivcombat close" });
         }
     }
     private void Draw()

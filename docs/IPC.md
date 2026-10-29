@@ -72,3 +72,19 @@ for the framework thread. Settings opens the primary screen surface. No world
 placement, item mutations or crafting actions are supported. Snapshots report
 readiness, login state, binding support, loaded-bag count, preview and window
 state; no inventory contents, worklist or player identity is exposed.
+
+## Additive screen-layout control for Camp
+
+Journal, Character, Combat and Chat now advertise `window.layout` within protocol
+version 1. Parameters are viewport-relative `x`, `y`, `width`, `height`, all finite
+and bounded to the viewport. Current geometry appears as `window.layout` in cached
+status once a screen window has drawn. Journal and Character refuse layout writes
+while a native/world host is requested; request screen mode explicitly first.
+Combat scales its fixed deck and preserves a viewport-relative top-left anchor.
+The owning module applies its own size limits and owns all rendering and input.
+
+Older clients ignore the additional status field. Camp checks actual method
+capabilities, preserving an older provider's position while using its supported
+visibility controls. Layout requests cannot send chat, trigger a hotbar or acquire
+a controller lease. Vitals' multiple panels and individual world anchors retain
+their existing provider-specific positioning.

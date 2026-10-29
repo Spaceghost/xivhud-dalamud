@@ -172,4 +172,15 @@ public class EndpointTests
         Assert.Equal("applied", Reply(endpoint, Request("request.status", new { id })).GetProperty("result").GetProperty("state").GetString());
     }
 
+    [Theory]
+    [InlineData("journal")][InlineData("character")][InlineData("combat")][InlineData("chat")]
+    public void ScreenLayoutChangesAreValidatedAndQueuedWithoutEnablingGameActions(string module)
+    {
+        using var endpoint=new HudEndpoint(module);
+        Assert.False(Reply(endpoint,Request("window.layout",new{x=.9,y=0,width=.5,height=.5})).GetProperty("ok").GetBoolean());
+        Assert.False(Reply(endpoint,Request("window.layout",new{x=0,y=0,width=.5,height=.5,command="/say hi"})).GetProperty("ok").GetBoolean());
+        Assert.True(Reply(endpoint,Request("window.layout",new{x=.1,y=.1,width=.5,height=.5})).GetProperty("ok").GetBoolean());
+        var count=0;endpoint.Process(c=>{Assert.Equal("window.layout",c.Method);count++;return null;});Assert.Equal(1,count);
+    }
+
 }

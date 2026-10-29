@@ -1,9 +1,9 @@
 <Project Sdk="Dalamud.NET.Sdk/15.0.0">
-  <PropertyGroup><AssemblyName>XivHud.Combat</AssemblyName><RootNamespace>XivHud.Combat</RootNamespace><Version>0.1.0.3</Version><AllowUnsafeBlocks>true</AllowUnsafeBlocks><TreatWarningsAsErrors>true</TreatWarningsAsErrors></PropertyGroup>
+  <PropertyGroup><AssemblyName>XivHud.Combat</AssemblyName><RootNamespace>XivHud.Combat</RootNamespace><Version>0.1.0.4</Version><AllowUnsafeBlocks>true</AllowUnsafeBlocks><TreatWarningsAsErrors>true</TreatWarningsAsErrors></PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../XivHud.Combat.Core/XivHud.Combat.Core.csproj" />
     <ProjectReference Include="../../../xivhud-windowing/src/XivHud.Protocol/XivHud.Protocol.csproj" />
     <Compile Include="../../../shared/IllustratedStyle.cs" Link="IllustratedStyle.cs" />
     <Compile Include="../../../xivhud-vitals/src/XivHud.Vitals/VitalsData.cs" Link="VitalsData.cs" />
-  <Compile Include="../../../shared/IllustratedChrome.cs" Link="IllustratedChrome.cs" /></ItemGroup>
+  <Compile Include="../../../shared/IllustratedChrome.cs" Link="IllustratedChrome.cs" /><Compile Include="../../../shared/WorkspaceLayout.cs" Link="WorkspaceLayout.cs" /></ItemGroup>
 </Project>
