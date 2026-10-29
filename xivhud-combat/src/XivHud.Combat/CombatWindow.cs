@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Text.RegularExpressions;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures;
 using Dalamud.Plugin.Services;
@@ -24,12 +25,13 @@ internal sealed class CombatWindow(IllustratedChrome chrome, Configuration confi
     private void Deck(CombatSnapshot state, long now, bool allowed)
     {
         var viewport = ImGui.GetMainViewport(); var cols = state.Cross ? 8 : 12;
-        var slotSize = Math.Max(12, Math.Min(45f * config.Scale, (viewport.WorkSize.X - 32) / cols - 5)); var width = cols * (slotSize + 5) + 32; var height = 334 + (int)Math.Ceiling(state.Slots.Count / (double)cols) * (slotSize + 5);
+        var slotSize = Math.Max(12, Math.Min(45f * config.Scale, (viewport.WorkSize.X - 56) / cols - 5)); var width = cols * (slotSize + 5) + 56; var height = 286 + (int)Math.Ceiling(state.Slots.Count / (double)cols) * (slotSize + 5);
         var size = new Vector2(Math.Min(width, viewport.WorkSize.X), Math.Min(height, viewport.WorkSize.Y));
         var position = viewport.WorkPos + Vector2.Max(Vector2.Zero, viewport.WorkSize - size) * new Vector2(config.X, config.Y);
         ImGui.SetNextWindowSize(size); ImGui.SetNextWindowPos(position);
         var flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBackground;
         ImGui.PushStyleColor(ImGuiCol.WindowBg, new Vector4(.06f, .08f, .10f, .94f));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(24, 16));
         var drew = ImGui.Begin("Combat deck###XivHud.Combat.Deck", flags);
         try
         {
@@ -54,7 +56,7 @@ internal sealed class CombatWindow(IllustratedChrome chrome, Configuration confi
             ImGui.PushStyleColor(ImGuiCol.Text, V(config.DarkPaper ? Ivory : Ink));
             var actor = state.Vitals.Player;
             ImGui.TextUnformatted($"{actor.Job}   ·   HP {actor.Hp.Display}   ·   {actor.Secondary.Label} {actor.Secondary.Display}");
-            var bar = ImGui.GetCursorScreenPos();
+            var bar = paper + new Vector2(12, 39);
             d.AddRectFilled(bar, bar + new Vector2(size.X - 66, 5), C(86, 77, 57, 80), 2);
             d.AddRectFilled(bar, bar + new Vector2((size.X - 66) * actor.Hp.Fraction, 5), Aether, 2);
             ImGui.PopStyleColor();
@@ -101,12 +103,15 @@ internal sealed class CombatWindow(IllustratedChrome chrome, Configuration confi
                 if ((i + 1) % cols != 0) ImGui.SameLine(0, 5);
             }
             ImGui.Separator();
-            ImGui.TextColored(new Vector4(.55f, .8f, .9f, 1), state.GaugeStatus);
-            ImGui.TextWrapped(string.Join(" · ", state.Gauge.Take(12).Select(x => x.Label + ": " + x.Value)));
+            var resources = state.Gauge.Where(x => !x.Label.Contains("Timer", StringComparison.Ordinal)
+                && x.Value is not ("0" or "False" or "false" or "None" or "[]")).Take(4).ToArray();
+            ImGui.TextColored(V(PaleGold), actor.Job + "  ·  Level " + actor.Level);
+            if (resources.Length > 0)
+                ImGui.TextWrapped(string.Join("  ·  ", resources.Select(x => Regex.Replace(x.Label, "(?<=[a-z0-9])(?=[A-Z])", " ") + ": " + x.Value)));
             if (ActionStatus.Length > 0) ImGui.TextDisabled(ActionStatus);
             if (!config.LockLayout && ImGui.IsMouseReleased(ImGuiMouseButton.Left)) save();
         }
-        finally { ImGui.End(); ImGui.PopStyleColor(); }
+        finally { ImGui.End(); ImGui.PopStyleVar(); ImGui.PopStyleColor(); }
     }
     private void Effects(string title, IReadOnlyList<StatusReading>? readings, float age, bool mineOnly)
     {

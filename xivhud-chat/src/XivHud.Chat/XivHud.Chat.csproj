@@ -1,5 +1,5 @@
 <Project Sdk="Dalamud.NET.Sdk/15.0.0">
-  <PropertyGroup><AssemblyName>XivHud.Chat</AssemblyName><RootNamespace>XivHud.Chat</RootNamespace><Version>0.1.0.1</Version><AllowUnsafeBlocks>true</AllowUnsafeBlocks><TreatWarningsAsErrors>true</TreatWarningsAsErrors></PropertyGroup>
+  <PropertyGroup><AssemblyName>XivHud.Chat</AssemblyName><RootNamespace>XivHud.Chat</RootNamespace><Version>0.1.0.2</Version><AllowUnsafeBlocks>true</AllowUnsafeBlocks><TreatWarningsAsErrors>true</TreatWarningsAsErrors></PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../XivHud.Chat.Core/XivHud.Chat.Core.csproj" />
     <ProjectReference Include="../../../xivhud-windowing/src/XivHud.Protocol/XivHud.Protocol.csproj" />

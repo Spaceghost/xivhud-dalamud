@@ -91,6 +91,8 @@ internal sealed class ChatWindow(IllustratedChrome chrome, Configuration config,
         var ink = config.DarkPaper ? Ivory : Ink;
         ImGui.PushStyleColor(ImGuiCol.Text, V(ink));
         ImGui.PushStyleColor(ImGuiCol.TextDisabled, V(config.DarkPaper ? Muted : C(100, 88, 66)));
+        ImGui.PushStyleColor(ImGuiCol.FrameBg, V(config.DarkPaper ? Ink : C(214, 199, 163)));
+        ImGui.PushStyleColor(ImGuiCol.Button, V(config.DarkPaper ? Leather : C(214, 199, 163)));
         try
         {
             ImGui.TextUnformatted(ChannelLabel(channel));
@@ -130,6 +132,9 @@ internal sealed class ChatWindow(IllustratedChrome chrome, Configuration config,
             ImGui.Separator();
             // The composer stays on the dark binding so controls and drafts retain contrast.
             ImGui.PushStyleColor(ImGuiCol.Text, V(Ivory));
+            ImGui.PushStyleColor(ImGuiCol.TextDisabled, V(Muted));
+            ImGui.PushStyleColor(ImGuiCol.FrameBg, V(Ink));
+            ImGui.PushStyleColor(ImGuiCol.Button, V(Leather));
             try
             {
             ImGui.SetNextItemWidth(160);
@@ -150,14 +155,16 @@ internal sealed class ChatWindow(IllustratedChrome chrome, Configuration config,
             if ((enter || clicked) && !Preview && canSend && config.Enabled) send(compose, Draft, Recipient);
             ImGui.EndDisabled();
             }
-            finally { ImGui.PopStyleColor(); }
+            finally { ImGui.PopStyleColor(4); }
             if (Status.Length > 0) ImGui.TextWrapped(Status);
         }
-        finally { ImGui.PopStyleColor(2); }
+        finally { ImGui.PopStyleColor(4); }
     }
     private void NotificationInbox()
     {
         ImGui.PushStyleColor(ImGuiCol.Text, V(config.DarkPaper ? Ivory : Ink));
+        ImGui.PushStyleColor(ImGuiCol.Button, V(config.DarkPaper ? Leather : C(214, 199, 163)));
+        ImGui.PushStyleColor(ImGuiCol.TextDisabled, V(config.DarkPaper ? Muted : C(100, 88, 66)));
         try
         {
         ImGui.TextUnformatted("Notification center");
@@ -177,7 +184,7 @@ internal sealed class ChatWindow(IllustratedChrome chrome, Configuration config,
         }
         ImGui.EndChild();
         }
-        finally { ImGui.PopStyleColor(); }
+        finally { ImGui.PopStyleColor(3); }
     }
 
     private void Notifications()
