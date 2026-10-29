@@ -8,7 +8,8 @@
     "xivhud-combat/src/XivHud.Combat/XivHud.Combat.csproj",
     "xivhud-chat/src/XivHud.Chat/XivHud.Chat.csproj",
     "xivhud-inventory/src/XivHud.Inventory/XivHud.Inventory.csproj",
-    "xivhud-crafting/src/XivHud.Crafting/XivHud.Crafting.csproj"
+    "xivhud-crafting/src/XivHud.Crafting/XivHud.Crafting.csproj",
+    "xivhud-windows/src/XivHud.Windows/XivHud.Windows.csproj"
   ],
   "packages": [
     {
@@ -19,7 +20,8 @@
       "required": [
         "XivHud.Core.dll",
         "XivHud.Protocol.dll"
-      ]
+      ],
+      "development": true
     },
     {
       "project": "XivHud.Journal",
@@ -93,6 +95,16 @@
         "XivHud.Items.Dalamud.dll",
         "XivHud.Protocol.dll"
       ]
+    },
+    {
+      "project": "XivHud.Windows",
+      "manifest": "xivhud-windows/src/XivHud.Windows/XivHud.Windows.json",
+      "installer": false,
+      "required": [
+        "XivHud.Windows.Core.dll",
+        "XivHud.Windowing.Dalamud.dll",
+        "KamiToolKit.dll"
+      ]
     }
   ],
   "tests": [
@@ -105,12 +117,17 @@
     "xivhud-vitals/tests/XivHud.Vitals.Tests/XivHud.Vitals.Tests.csproj",
     "xivhud-combat/tests/XivHud.Combat.Tests/XivHud.Combat.Tests.csproj",
     "xivhud-chat/tests/XivHud.Chat.Tests/XivHud.Chat.Tests.csproj",
-    "xivhud-items/tests/XivHud.Items.Tests/XivHud.Items.Tests.csproj"
+    "xivhud-items/tests/XivHud.Items.Tests/XivHud.Items.Tests.csproj",
+    "xivhud-windows/tests/XivHud.Windows.Tests/XivHud.Windows.Tests.csproj"
   ],
   "umbra": [
     "xivhud-journal/src/Umbra.XivHud.Journal/Umbra.XivHud.Journal.csproj",
     "xivhud-character/src/Umbra.XivHud.Character/Umbra.XivHud.Character.csproj",
     "xivhud-combat/src/Umbra.XivHud.Combat/Umbra.XivHud.Combat.csproj",
-    "xivhud-chat/src/Umbra.XivHud.Chat/Umbra.XivHud.Chat.csproj"
+    "xivhud-chat/src/Umbra.XivHud.Chat/Umbra.XivHud.Chat.csproj",
+    "xivhud-inventory/src/Umbra.XivHud.Inventory/Umbra.XivHud.Inventory.csproj",
+    "xivhud-crafting/src/Umbra.XivHud.Crafting/Umbra.XivHud.Crafting.csproj",
+    "xivhud-windows/src/Umbra.XivHud.Windows/Umbra.XivHud.Windows.csproj",
+    "xivhud-vitals/src/Umbra.XivHud.Vitals/Umbra.XivHud.Vitals.csproj"
   ]
 }

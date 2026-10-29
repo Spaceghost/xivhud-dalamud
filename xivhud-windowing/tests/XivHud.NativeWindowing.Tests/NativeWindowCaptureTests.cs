@@ -44,6 +44,22 @@ public sealed unsafe class NativeWindowCaptureTests
         Assert.Equal(3, root.DrawList.VtxBuffer.Size);
     }
 
+    [Fact]
+    public void FloatingCaptureCanIncludeOwnedPopupOutsideRootWithAnExpandedTexture()
+    {
+        using var fixture = new Fixture();
+        var root = fixture.Window(Position, Size);
+        var popup = fixture.Window(Position + new Vector2(850, 100), new(300, 200));
+        popup.RootWindowPopupTree = root; popup.Flags = ImGuiWindowFlags.Popup;
+        var expanded = new Vector2(1150, 700);
+        Assert.True(NativeWindowCapture.DrawOwned(root, [root, popup], Position, expanded, frame =>
+        {
+            Assert.Equal(expanded, frame.Data->DisplaySize);
+            Assert.Equal(2, frame.Data->CmdListsCount); return true;
+        }, true));
+        Assert.Equal(0, popup.DrawList.CmdBuffer.Size);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

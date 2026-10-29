@@ -16,7 +16,7 @@ namespace XivHud.Journal;
 internal sealed class JournalWindow : IDisposable
 {
     internal const string WindowName = "Adventurer's Journal###XivHud.Journal";
-    private readonly GhosttyWindowHost windowHost;
+    private readonly WindowHostRouter windowHost;
     private readonly NativeGameWindowHost nativeHost;
     private readonly Configuration config;
     private readonly Action save;
@@ -72,7 +72,10 @@ internal sealed class JournalWindow : IDisposable
         controller = new JournalControllerClient(pi, config);
         var call = pi.GetIpcSubscriber<string, string>(GhosttyWindowHost.CallChannel);
         var post = pi.GetIpcSubscriber<string, object>(GhosttyWindowHost.PostChannel);
-        windowHost = new GhosttyWindowHost(WindowName, "XivHud.Journal", call.InvokeFunc, post.InvokeAction);
+        var floatingCall = pi.GetIpcSubscriber<string, string>(FloatingWindowHost.CallChannel);
+        var floatingPost = pi.GetIpcSubscriber<string, object>(FloatingWindowHost.PostChannel);
+        windowHost = new WindowHostRouter(new FloatingWindowHost(WindowName, "XivHud.Journal", floatingCall.InvokeFunc, floatingPost.InvokeAction),
+            new GhosttyWindowHost(WindowName, "XivHud.Journal", call.InvokeFunc, post.InvokeAction));
         nativeHost = new NativeGameWindowHost(pi, WindowName, "XivHudJournal", "Journal", new(1080, 700));
         var acquired = new List<IFontHandle>();
         try
@@ -105,6 +108,7 @@ internal sealed class JournalWindow : IDisposable
     internal void Draw(IReadOnlyList<JournalEntry> entries, string? unavailable, bool loggedIn = false)
     {
         IsControllerFocused = false;
+        windowHost.UseGhostty = config.UseGhosttyWorldWindows;
         var placement = Enum.TryParse<WindowPlacement>(config.WindowHostPlacement, out var requested) && Enum.IsDefined(requested)
             ? requested : WindowPlacement.Hud;
         var now = Stopwatch.GetTimestamp() / (double)Stopwatch.Frequency;
@@ -460,6 +464,8 @@ internal sealed class JournalWindow : IDisposable
             ImGui.Spacing(); ImGui.Separator(); ImGui.TextUnformatted("Your journal window");
             if (ImGui.Button($"Window: {PresentationLabel()}", new(-1, 0))) { CyclePresentation(1); changed = true; }
             HighlightSetting(7, s);
+            var useGhostty = config.UseGhosttyWorldWindows;
+            if (ImGui.Checkbox("Use Ghostty world host", ref useGhostty)) { config.UseGhosttyWorldWindows = useGhostty; changed = true; }
             if (ImGui.Button($"Placement: {PlacementLabel(config.WindowHostPlacement)}", new(-1, 0))) { CyclePlacement(1); changed = true; }
             HighlightSetting(8, s);
             using (small.Push()) ImGui.TextWrapped(HostingStatus);

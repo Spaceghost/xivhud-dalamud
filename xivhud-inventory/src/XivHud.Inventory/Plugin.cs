@@ -23,6 +23,8 @@ public sealed class Plugin : IDalamudPlugin
     private readonly HudEndpoint endpoint = new("inventory");
     private readonly ConcurrentQueue<string> requests = new();
     private ICallGateProvider<string, string>? call;
+    private ICallGateProvider<object>? toggle, settings;
+    private ICallGateProvider<bool>? ready;
     private bool disposed, registered, failed;
     private long nextRead, nextPublish;
     private uint territory;
@@ -37,6 +39,9 @@ public sealed class Plugin : IDalamudPlugin
             registered = commands.AddHandler("/xivinventory", new CommandInfo((_, args) => Queue(args.Trim().ToLowerInvariant())) { HelpMessage = "Open Inventory; close, preview, settings." });
             if (!registered) throw new InvalidOperationException("/xivinventory already registered");
             call = pi.GetIpcProvider<string, string>("XivHud.Inventory.v1.Call"); call.RegisterFunc(endpoint.Call);
+            toggle = pi.GetIpcProvider<object>("XivHud.Inventory.Toggle"); toggle.RegisterAction(() => Queue("toggle"));
+            settings = pi.GetIpcProvider<object>("XivHud.Inventory.OpenSettings"); settings.RegisterAction(Open);
+            ready = pi.GetIpcProvider<bool>("XivHud.Inventory.Ready"); ready.RegisterFunc(() => !disposed);
             framework.Update += Update; client.Logout += Logout;
             pi.UiBuilder.Draw += Draw; pi.UiBuilder.OpenMainUi += Open; pi.UiBuilder.OpenConfigUi += Open;
         } catch { Dispose(); throw; }
@@ -48,6 +53,7 @@ public sealed class Plugin : IDalamudPlugin
     private void Open() => Queue("open");
     private void Apply(string value)
     {
+        if (value == "toggle") value = window.Open ? "close" : "open";
         if (value == "close") { window.Open = false; window.Preview = false; window.Bags = BagSnapshot.Empty; return; }
         window.Open = true; window.Preview = value == "preview"; failed = false; nextRead = 0;
     }
@@ -86,7 +92,7 @@ public sealed class Plugin : IDalamudPlugin
         if (disposed) return; disposed = true;
         framework.Update -= Update; client.Logout -= Logout;
         pi.UiBuilder.Draw -= Draw; pi.UiBuilder.OpenMainUi -= Open; pi.UiBuilder.OpenConfigUi -= Open;
-        call?.UnregisterFunc(); endpoint.Dispose(); if (registered) commands.RemoveHandler("/xivinventory");
+        toggle?.UnregisterAction(); settings?.UnregisterAction(); ready?.UnregisterFunc(); call?.UnregisterFunc(); endpoint.Dispose(); if (registered) commands.RemoveHandler("/xivinventory");
         window.Clear(); requests.Clear();
     }
 }

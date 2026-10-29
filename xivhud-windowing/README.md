@@ -95,3 +95,13 @@ dotnet test tests/XivHud.Windowing.Tests/XivHud.Windowing.Tests.csproj
 Journal's local world-provider integration has been observed in the HUD placement: content appeared, its controller polling stopped while unfocused and resumed after explicit focus. On 2026-10-04 at 02:12:57 UTC, `/xivjournal world` opened a visible HUD Journal without a mouse click; status reported `controller=Active` and `window=World window · hud` after the requested focus settled (`/tmp/xivhud-journal-world-settled.png`). `/xivjournal screen` then returned to the normal window, confirmed visually and by status at 02:14:24 UTC. Other placement modes and physical controller actions remain unverified. Native-provider evidence is recorded separately above.
 
 Protocol references: local Ghostty `docs/ADOPT.md`, `docs/IPC.md`, `core/app/panels.nelua`, `core/app/ipc.nelua`, and `lua/ipc.lua`; no Ghostty modifications are required.
+
+## Provider-independent hosting
+
+The adoption state machine is now `AdoptedWindowHost`. `GhosttyWindowHost` remains
+its existing channel adapter; `FloatingWindowHost` talks to the independent
+`XivHud.Windows.v1.Call`/`.Post` service. `WindowHostRouter` releases ownership
+before changing providers. Independent placement requires the standalone Windows
+module, with screen fallback when it is unavailable. Native frames remain a
+separate provider. See [Floating Windows](../xivhud-windows/README.md) for the
+capture, pointer, world-projection and transport boundaries.

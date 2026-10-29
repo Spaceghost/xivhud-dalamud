@@ -3,14 +3,14 @@ using Dalamud.Bindings.ImGui;
 
 namespace XivHud.Windowing.Dalamud;
 
-internal readonly unsafe struct NativeWindowDrawFrame(ImDrawData* data)
+public readonly unsafe struct NativeWindowDrawFrame(ImDrawData* data)
 {
     public readonly ImDrawData* Data = data;
 }
 
 /// <summary>Matches Dalamud's own ResizeAndDrawWindow traversal and additionally includes only
 /// this root's popup trees. Uses the installed typed bindings; no pointer survives this call.</summary>
-internal static unsafe class NativeWindowCapture
+public static unsafe class NativeWindowCapture
 {
     public static bool Draw(string name, Vector2 position, Vector2 size, Func<NativeWindowDrawFrame, bool> present)
     {
@@ -21,11 +21,28 @@ internal static unsafe class NativeWindowCapture
         return DrawOwned(root, new ReadOnlySpan<ImGuiWindowPtr>(context.Windows.Data, context.Windows.Size), position, size, present);
     }
 
+    /// <summary>Standalone floating capture also includes popup extents, without clipping menus to the root.</summary>
+    public static bool DrawExpanded(string name, Func<NativeWindowDrawFrame, bool> present)
+    {
+        var root = ImGuiP.FindWindowByName(name);
+        var context = ImGui.GetCurrentContext();
+        if (root.IsNull || context.IsNull || !root.Active || root.Hidden) return false;
+        if (context.Windows.Size is < 0 or > 4096) throw new InvalidOperationException("Unexpected ImGui window count");
+        var position = root.Pos; var end = root.Pos + root.Size;
+        var all = new ReadOnlySpan<ImGuiWindowPtr>(context.Windows.Data, context.Windows.Size);
+        foreach (var window in all)
+            if (!window.IsNull && window.Active && !window.Hidden && window.RootWindowPopupTree == root)
+            { position = Vector2.Min(position, window.Pos); end = Vector2.Max(end, window.Pos + window.Size); }
+        var size = end - position;
+        if (size.X < 32 || size.Y < 32 || size.X > 4096 || size.Y > 4096) throw new InvalidOperationException("Floating capture size exceeds supported bounds");
+        return DrawOwned(root, all, position, size, present, true);
+    }
+
     internal static bool DrawOwned(ImGuiWindowPtr root, ReadOnlySpan<ImGuiWindowPtr> allWindows,
-        Vector2 position, Vector2 size, Func<NativeWindowDrawFrame, bool> present)
+        Vector2 position, Vector2 size, Func<NativeWindowDrawFrame, bool> present, bool allowOverflow = false)
     {
         if (root.IsNull || !root.Active || root.Hidden) return false;
-        if (Vector2.Distance(root.Pos, position) > 2 || Vector2.Distance(root.Size, size) > 2)
+        if (!allowOverflow && (Vector2.Distance(root.Pos, position) > 2 || Vector2.Distance(root.Size, size) > 2))
             throw new InvalidOperationException("The owned ImGui root does not match the native content rectangle");
         var windows = new List<ImGuiWindowPtr>(16);
         var seen = new HashSet<nint>();
@@ -58,7 +75,7 @@ internal static unsafe class NativeWindowCapture
         {
             if (!seen.Add((nint)window.Handle) || !window.Active || window.Hidden) return;
             if (seen.Count > 128) throw new InvalidOperationException("Too many owned child/popup windows");
-            if ((window.Flags & ImGuiWindowFlags.Popup) != 0 &&
+            if (!allowOverflow && (window.Flags & ImGuiWindowFlags.Popup) != 0 &&
                 (window.Pos.X < position.X - 1 || window.Pos.Y < position.Y - 1 ||
                  window.Pos.X + window.Size.X > position.X + size.X + 1 || window.Pos.Y + window.Size.Y > position.Y + size.Y + 1))
                 throw new InvalidOperationException("An owned popup extends beyond the native content area");

@@ -21,6 +21,7 @@ public static class SurfaceCatalog
         ("vitals", "Vitals", "Combat", 0x9ece6a),
         ("combat", "Combat deck", "Combat", 0xff9e64),
         ("chat", "Chat and notifications", "Communication", 0xf7768e),
+        ("windows", "Floating windows", "Workspace", 0x7dcfff),
         ("inventory", "Inventory", "Character and items", 0xe0af68),
         ("crafting", "Crafting worklist", "Crafting and gathering", 0x9ece6a),
         ("hud", "Interface settings", "System", 0x7dcfff),
@@ -110,7 +111,7 @@ public static class SurfaceCatalog
             var name = plugin.InternalName;
             if (string.IsNullOrEmpty(name) || name.Length > 128 || !name.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '_' or '-')) continue;
             if (!names.Add(name) || !plugin.MainUi && !plugin.ConfigUi) continue;
-            var module = name switch { "XivHud" => "hud", "XivHud.Journal" => "journal", "XivHud.Character" => "character", "XivHud.Vitals" => "vitals", "XivHud.Combat" => "combat", "XivHud.Chat" => "chat", "XivHud.Inventory" => "inventory", "XivHud.Crafting" => "crafting", _ => null };
+            var module = name switch { "XivHud" => "hud", "XivHud.Journal" => "journal", "XivHud.Character" => "character", "XivHud.Vitals" => "vitals", "XivHud.Combat" => "combat", "XivHud.Chat" => "chat", "XivHud.Inventory" => "inventory", "XivHud.Crafting" => "crafting", "XivHud.Windows" => "windows", _ => null };
             if (module is not null)
             {
                 if (output.Any(x => x.Id == "module:" + module && x.Available) || !plugin.Loaded) continue;

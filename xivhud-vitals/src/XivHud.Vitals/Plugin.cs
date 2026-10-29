@@ -26,6 +26,8 @@ public sealed class Plugin : IDalamudPlugin
     private readonly ConcurrentQueue<string> requests = new();
     private readonly HudEndpoint ipc = new("vitals");
     private ICallGateProvider<string, string>? call;
+    private ICallGateProvider<object>? toggle, settings;
+    private ICallGateProvider<bool>? ready;
     private IDtrBarEntry? toolbar;
     private bool disposed, commandRegistered, drawFailed;
     private long nextPublish;
@@ -45,6 +47,9 @@ public sealed class Plugin : IDalamudPlugin
             window = new(pi, config, Save, textures);
             call = pi.GetIpcProvider<string, string>("XivHud.Vitals.v1.Call");
             call.RegisterFunc(ipc.Call);
+            toggle = pi.GetIpcProvider<object>("XivHud.Vitals.Toggle"); toggle.RegisterAction(() => Enqueue("toggle"));
+            settings = pi.GetIpcProvider<object>("XivHud.Vitals.OpenSettings"); settings.RegisterAction(Settings);
+            ready = pi.GetIpcProvider<bool>("XivHud.Vitals.Ready"); ready.RegisterFunc(() => !disposed);
             commandRegistered = commands.AddHandler(Command, new CommandInfo(OnCommand)
             { HelpMessage = "Illustrated Vitals HUD. Options: open, close, settings, preview, lock, unlock, reset, arrange, manual, effects [on/off/mine/all], status. Native HUD visibility is unchanged." });
             if (!commandRegistered) throw new InvalidOperationException("/xivvitals is already registered.");
@@ -151,7 +156,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         if (disposed) return;
         disposed = true;
-        call?.UnregisterFunc(); ipc.Dispose();
+        toggle?.UnregisterAction(); settings?.UnregisterAction(); ready?.UnregisterFunc(); call?.UnregisterFunc(); ipc.Dispose();
         framework.Update -= Update; client.Logout -= Logout;
         pi.UiBuilder.Draw -= Draw; pi.UiBuilder.OpenMainUi -= Settings; pi.UiBuilder.OpenConfigUi -= Settings;
         if (commandRegistered) commands.RemoveHandler(Command);

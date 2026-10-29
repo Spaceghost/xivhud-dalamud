@@ -1,6 +1,6 @@
 # XivHud family
 
-Eight independently loadable Dalamud API 15 plugins, with shared illustration, controller and window hosting code. Source is collected here so a checkout builds the family without sibling repositories.
+Nine independently loadable Dalamud API 15 plugins, with shared illustration, controller and window hosting code. Source is collected here so a checkout builds the family without sibling repositories.
 
 | Part | Purpose | Publication |
 | --- | --- | --- |
@@ -12,6 +12,7 @@ Eight independently loadable Dalamud API 15 plugins, with shared illustration, c
 | XivHud.Chat | Conversations, explicit message composer and session notification center | Manual development package; live acceptance pending |
 | XivHud.Inventory | Searchable carried bags, HQ filtering and item details | Development package; live acceptance pending |
 | XivHud.Crafting | Recipe browser and shared-material session worklist | Development package; live acceptance pending |
+| XivHud.Windows | Independent floating plugin windows with screen recovery | Development package; live acceptance recorded separately |
 | XivHud.Windowing / Windowing.Dalamud | Screen layout, optional native frames and Ghostty hosts | Bundled libraries, no installer entry |
 | XivHud.Protocol | Versioned cached status and queued UI operations | Bundled library |
 
@@ -36,9 +37,9 @@ tools/build.sh --test --locked
 tools/package.sh
 ```
 
-For local references: `tools/build.sh --references /path/to/reviewed/dalamud --test --locked`. `--offline-feed /path/to/nuget/cache` is available for offline builds. Dependencies have committed NuGet lock files. Release ZIPs use sorted entries and the source commit timestamp; rerunning packaging for the same outputs produces identical checksums. `release/build-info.json` records the source and reference hashes. Game-provided DLLs are excluded. Eight ZIPs are built, but only HUD and Journal appear in `pluginmaster-testing.json`.
+For local references: `tools/build.sh --references /path/to/reviewed/dalamud --test --locked`. `--offline-feed /path/to/nuget/cache` is available for offline builds. Dependencies have committed NuGet lock files. Release ZIPs use sorted entries and the source commit timestamp; rerunning packaging for the same outputs produces identical checksums. `release/build-info.json` records the source and reference hashes. Game-provided DLLs are excluded. Nine ZIPs are built, but only HUD and Journal appear in `pluginmaster-testing.json`.
 
-CI runs builds and all ten offline suites against the reviewed references and uploads packages. A separate manually dispatched release workflow publishes the `testing` channel from `master` after the same checks. No build starts the game or uploads player data. Character and Vitals remain development assets outside the normal automatic listing. An explicit development repository can install them through MCP without manual setup; live acceptance is still pending.
+CI runs builds and all eleven offline suites against the reviewed references and uploads packages. A separate manually dispatched release workflow publishes the `testing` channel from `master` after the same checks. No build starts the game or uploads player data. Character and Vitals remain development assets outside the normal automatic listing. An explicit development repository can install them through MCP without manual setup; live acceptance is still pending.
 
 ## Controls and recovery
 
@@ -94,3 +95,19 @@ in `/xivnav`, use the shared illustrated style and local game data, and support
 for coverage and acceptance limits. These additions do not complete the full UI
 rewrite: exploration, layout editing, full item workflows, bespoke job gauges and
 live controller acceptance remain.
+
+## Independent floating windows and the Umbra family
+
+`/xivwindows` opens the standalone floating-window manager. Select an open plugin
+window and float it beside the character, in view, here in the world or on the
+ground. `/xivwindows screen` recovers all sources. This host creates no Ghostty
+terminal sessions. Ghostty remains an explicit provider for its existing terminal
+and remote-window experience. Journal and Character default to the independent
+host for world presentation and retain an appearance setting for Ghostty.
+
+Optional Umbra toolbar plugins now cover Journal, Character, Combat, Chat, Vitals,
+Inventory, Crafting and Floating Windows. Build them with
+`tools/build.sh --umbra-references /path/to/Umbra`; packaging includes their DLLs
+as separate release assets. The content modules remain independently loadable
+Dalamud plugins and do not require Umbra. See [Floating Windows](xivhud-windows/README.md)
+and the [acceptance record](docs/WORLD-WINDOWS-ACCEPTANCE.md).

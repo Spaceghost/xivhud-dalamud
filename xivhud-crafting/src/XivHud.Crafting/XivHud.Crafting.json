@@ -2,7 +2,7 @@
   "Author": "Johnneylee Jack Rollins",
   "Name": "XivHud \u00b7 Crafting",
   "InternalName": "XivHud.Crafting",
-  "AssemblyVersion": "0.1.0.0",
+  "AssemblyVersion": "0.1.0.1",
   "Punchline": "Plan crafts and materials.",
   "Description": "Development module for the shared illustrated UI. Native game windows remain available.",
   "ApplicableVersion": "any",

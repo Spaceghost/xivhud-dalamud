@@ -8,12 +8,13 @@ namespace XivHud.Windowing;
 /// All calls must be serialized on the owning module's UI thread. Keep drawing the original
 /// window: Ghostty captures its completed draw lists and remaps the pointer itself.
 /// </summary>
-public sealed class GhosttyWindowHost : IWindowHost
+public class AdoptedWindowHost : IWindowHost
 {
     public const string CallChannel = "GhosttyDalamud.v1.Call";
     public const string PostChannel = "GhosttyDalamud.v1.Post";
     private const double PollSeconds = .25;
     private const double RequestTimeout = 5;
+    private readonly string provider;
     private readonly string windowName;
     private readonly string caller;
     private readonly Func<string, string> call;
@@ -29,13 +30,14 @@ public sealed class GhosttyWindowHost : IWindowHost
     private WindowPlacement? requestedPlacement;
     private string? placementError;
 
-    public GhosttyWindowHost(string windowName, string caller, Func<string, string> call, Action<string> post)
+    public AdoptedWindowHost(string windowName, string caller, Func<string, string> call, Action<string> post, string provider = "Ghostty")
     {
         ValidateText(windowName, nameof(windowName));
         var marker = windowName.IndexOf("###", StringComparison.Ordinal);
         if (marker <= 0 || marker + 3 == windowName.Length)
             throw new ArgumentException("Use a visible title followed by a unique ### ImGui identity.", nameof(windowName));
         ValidateText(caller, nameof(caller));
+        this.provider = provider;
         this.windowName = windowName;
         this.caller = caller;
         this.call = call ?? throw new ArgumentNullException(nameof(call));
@@ -172,9 +174,9 @@ public sealed class GhosttyWindowHost : IWindowHost
                     returned = true;
                     BeginRelease();
                     Release(now);
-                    if (!releasePending) Set(WindowHostState.Unavailable, "Ghostty did not adopt this window; Try again when it is ready");
+                    if (!releasePending) Set(WindowHostState.Unavailable, $"{provider} did not adopt this window; Try again when it is ready");
                 }
-                else Set(WindowHostState.Adopting, "Waiting for Ghostty to adopt this window");
+                else Set(WindowHostState.Adopting, $"Waiting for {provider} to adopt this window");
                 return;
             }
 
@@ -185,7 +187,7 @@ public sealed class GhosttyWindowHost : IWindowHost
             attempted = true;
             attemptAt = now;
             post("adopt " + windowName);
-            Set(WindowHostState.Adopting, "Waiting for Ghostty to adopt this window");
+            Set(WindowHostState.Adopting, $"Waiting for {provider} to adopt this window");
         }
         catch (Exception ex)
         {
@@ -268,7 +270,7 @@ public sealed class GhosttyWindowHost : IWindowHost
                 var result = Request("panel.place", new { id = PanelId, pin = PlacementArgument(placement) });
                 if (!result.TryGetProperty("queued", out var queued) || queued.ValueKind != JsonValueKind.True ||
                     !result.TryGetProperty("request", out var request) || !request.TryGetInt64(out placementRequest) || placementRequest <= 0)
-                    throw new InvalidOperationException("Ghostty did not acknowledge the placement request");
+                    throw new InvalidOperationException($"{provider} did not acknowledge the placement request");
                 placementAt = now;
             }
             catch (Exception ex) { placementError = Error(ex); }
@@ -285,7 +287,7 @@ public sealed class GhosttyWindowHost : IWindowHost
                         if (!entry.TryGetProperty("request", out var id) || !id.TryGetInt64(out var value) || value != placementRequest) continue;
                         placementRequest = 0;
                         if (!entry.TryGetProperty("ok", out var ok) || ok.ValueKind != JsonValueKind.True)
-                            placementError = Message(entry, "Ghostty refused that placement");
+                            placementError = Message(entry, $"{provider} refused that placement");
                         else
                         {
                             placementError = null;
@@ -324,7 +326,7 @@ public sealed class GhosttyWindowHost : IWindowHost
                 var result = Request("window.focus", new { id = PanelId });
                 if (!result.TryGetProperty("queued", out var queued) || queued.ValueKind != JsonValueKind.True ||
                     !result.TryGetProperty("request", out var request) || !request.TryGetInt64(out focusRequest) || focusRequest <= 0)
-                    throw new InvalidOperationException("Ghostty did not acknowledge the focus request");
+                    throw new InvalidOperationException($"{provider} did not acknowledge the focus request");
                 focusAt = now;
             }
             catch (Exception ex)
@@ -345,7 +347,7 @@ public sealed class GhosttyWindowHost : IWindowHost
                         if (!entry.TryGetProperty("request", out var id) || !id.TryGetInt64(out var value) || value != focusRequest) continue;
                         focusRequest = 0;
                         focusError = entry.TryGetProperty("ok", out var ok) && ok.ValueKind == JsonValueKind.True
-                            ? null : Message(entry, "Ghostty refused input focus");
+                            ? null : Message(entry, $"{provider} refused input focus");
                         break;
                     }
                 }
@@ -372,15 +374,15 @@ public sealed class GhosttyWindowHost : IWindowHost
     {
         var result = Request("panel.list");
         if (!result.TryGetProperty("panels", out var panels) || panels.ValueKind != JsonValueKind.Array)
-            throw new InvalidOperationException("Ghostty's panel list is unavailable");
+            throw new InvalidOperationException($"{provider}'s panel list is unavailable");
         (int Id, string View)? found = null;
         foreach (var panel in panels.EnumerateArray())
         {
             if (!panel.TryGetProperty("kind", out var kind) || kind.GetString() != "adopted" ||
                 !panel.TryGetProperty("app", out var app) || app.GetString() != windowName) continue;
             if (!panel.TryGetProperty("id", out var id) || !id.TryGetInt32(out var value) || value <= 0)
-                throw new InvalidOperationException("Ghostty returned an invalid window identity");
-            if (found != null) throw new InvalidOperationException("Ghostty returned an ambiguous window identity");
+                throw new InvalidOperationException($"{provider} returned an invalid window identity");
+            if (found != null) throw new InvalidOperationException($"{provider} returned an ambiguous window identity");
             found = (value, panel.TryGetProperty("view", out var view) && view.ValueKind == JsonValueKind.String ? view.GetString()! : "world");
         }
         return found;
@@ -389,12 +391,12 @@ public sealed class GhosttyWindowHost : IWindowHost
     private JsonElement Request(string method, object? parameters = null)
     {
         var json = call(JsonSerializer.Serialize(new { method, @params = parameters, caller }));
-        if (json.Length > 65536) throw new InvalidOperationException("Ghostty returned an oversized reply");
+        if (json.Length > 65536) throw new InvalidOperationException($"{provider} returned an oversized reply");
         using var document = JsonDocument.Parse(json);
         var root = document.RootElement;
         if (!root.TryGetProperty("ok", out var ok) || ok.ValueKind != JsonValueKind.True)
-            throw new InvalidOperationException(Message(root, "Ghostty is unavailable"));
-        if (!root.TryGetProperty("result", out var result)) throw new InvalidOperationException("Ghostty returned an incomplete reply");
+            throw new InvalidOperationException(Message(root, $"{provider} is unavailable"));
+        if (!root.TryGetProperty("result", out var result)) throw new InvalidOperationException($"{provider} returned an incomplete reply");
         return result.Clone();
     }
 
@@ -409,7 +411,7 @@ public sealed class GhosttyWindowHost : IWindowHost
 
     private static string Message(JsonElement element, string fallback) =>
         element.TryGetProperty("error", out var error) && error.ValueKind == JsonValueKind.String ? error.GetString()! : fallback;
-    private static string Error(Exception ex) => string.IsNullOrWhiteSpace(ex.Message) ? "Ghostty is unavailable" : ex.Message;
+    private string Error(Exception ex) => string.IsNullOrWhiteSpace(ex.Message) ? $"{provider} is unavailable" : ex.Message;
     private void Set(WindowHostState state, string status) { State = state; Status = status; }
     private static void ValidateText(string value, string name)
     {
@@ -430,4 +432,16 @@ public sealed class GhosttyWindowHost : IWindowHost
         PanelId = 0;
         State = WindowHostState.Disposed;
     }
+}
+
+/// <summary>Existing Ghostty provider, preserving its protocol, ownership and behavior.</summary>
+public sealed class GhosttyWindowHost(string windowName, string caller, Func<string, string> call, Action<string> post)
+    : AdoptedWindowHost(windowName, caller, call, post);
+
+/// <summary>Independent presentation service; no Ghostty or terminal allocation.</summary>
+public sealed class FloatingWindowHost(string windowName, string caller, Func<string, string> call, Action<string> post)
+    : AdoptedWindowHost(windowName, caller, call, post, "Floating windows")
+{
+    public new const string CallChannel = "XivHud.Windows.v1.Call";
+    public new const string PostChannel = "XivHud.Windows.v1.Post";
 }
