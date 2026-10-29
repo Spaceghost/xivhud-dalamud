@@ -6,6 +6,8 @@ namespace XivHud.Chat;
 public sealed class Configuration : IPluginConfiguration
 {
     public int Version { get; set; } = 1;
+    public bool DarkPaper { get; set; }
+    public bool Ornament { get; set; } = true;
     public bool Enabled { get; set; }
     public bool Notifications { get; set; } = true;
     public bool NotifyTells { get; set; } = true;

@@ -106,5 +106,11 @@
     "xivhud-combat/tests/XivHud.Combat.Tests/XivHud.Combat.Tests.csproj",
     "xivhud-chat/tests/XivHud.Chat.Tests/XivHud.Chat.Tests.csproj",
     "xivhud-items/tests/XivHud.Items.Tests/XivHud.Items.Tests.csproj"
+  ],
+  "umbra": [
+    "xivhud-journal/src/Umbra.XivHud.Journal/Umbra.XivHud.Journal.csproj",
+    "xivhud-character/src/Umbra.XivHud.Character/Umbra.XivHud.Character.csproj",
+    "xivhud-combat/src/Umbra.XivHud.Combat/Umbra.XivHud.Combat.csproj",
+    "xivhud-chat/src/Umbra.XivHud.Chat/Umbra.XivHud.Chat.csproj"
   ]
 }

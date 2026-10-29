@@ -3,12 +3,13 @@ using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures;
 using Dalamud.Plugin.Services;
 using XivHud.Combat.Core;
+using XivHud.Style;
 using XivHud.Vitals.Core;
 using static XivHud.Style.IllustratedStyle;
 
 namespace XivHud.Combat;
 
-internal sealed class CombatWindow(Configuration config, Action save, ITextureProvider textures, Action<SlotIdentity> execute)
+internal sealed class CombatWindow(IllustratedChrome chrome, Configuration config, Action save, ITextureProvider textures, Action<SlotIdentity> execute)
 {
     internal bool Preview, SettingsOpen;
     internal string Status = "Disabled", ActionStatus = "";
@@ -16,27 +17,30 @@ internal sealed class CombatWindow(Configuration config, Action save, ITexturePr
     {
         var now = Environment.TickCount64;
         var state = Preview ? CombatPreview.Create(now, config.Cross, config.FirstBar, config.Rows) : config.Enabled && allowed && snapshot?.IsFresh(now) == true ? snapshot : null;
-        if (state is not null) Deck(state, now, allowed);
-        if (SettingsOpen) Settings();
+        IllustratedChrome.BeginTheme();
+        try { using var body = chrome.Body(); if (state is not null) Deck(state, now, allowed); if (SettingsOpen) Settings(); }
+        finally { IllustratedChrome.EndTheme(); }
     }
     private void Deck(CombatSnapshot state, long now, bool allowed)
     {
         var viewport = ImGui.GetMainViewport(); var cols = state.Cross ? 8 : 12;
-        var slotSize = Math.Max(12, Math.Min(45f * config.Scale, (viewport.WorkSize.X - 32) / cols - 5)); var width = cols * (slotSize + 5) + 32; var height = 250 + (int)Math.Ceiling(state.Slots.Count / (double)cols) * (slotSize + 5);
+        var slotSize = Math.Max(12, Math.Min(45f * config.Scale, (viewport.WorkSize.X - 32) / cols - 5)); var width = cols * (slotSize + 5) + 32; var height = 334 + (int)Math.Ceiling(state.Slots.Count / (double)cols) * (slotSize + 5);
         var size = new Vector2(Math.Min(width, viewport.WorkSize.X), Math.Min(height, viewport.WorkSize.Y));
         var position = viewport.WorkPos + Vector2.Max(Vector2.Zero, viewport.WorkSize - size) * new Vector2(config.X, config.Y);
         ImGui.SetNextWindowSize(size); ImGui.SetNextWindowPos(position);
-        var flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoMove;
+        var flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBackground;
         ImGui.PushStyleColor(ImGuiCol.WindowBg, new Vector4(.06f, .08f, .10f, .94f));
         var drew = ImGui.Begin("Combat deck###XivHud.Combat.Deck", flags);
         try
         {
             if (!drew) return;
-            var d = ImGui.GetWindowDrawList(); Frame(d, position, size, 1, true);
-            ImGui.TextColored(new Vector4(.9f, .8f, .55f, 1), Preview ? "COMBAT DECK · SAMPLE" : "COMBAT DECK · " + state.Vitals.Player.Job);
+            var d = ImGui.GetWindowDrawList(); Frame(d, position, size, 1, config.Ornament);
+            chrome.Title(position + new Vector2(8, 6), "Combat", "", Preview);
+            ImGui.SetCursorScreenPos(position + new Vector2(size.X - 140, 28));
+            if (ImGui.SmallButton("Appearance")) SettingsOpen = true;
             if (!config.LockLayout)
             {
-                ImGui.SameLine(); ImGui.Button("Move", new(60, 0));
+                ImGui.SetCursorScreenPos(position + new Vector2(24, 76)); ImGui.Button("Move binding", new(size.X - 48, 22));
                 if (ImGui.IsItemActive() && ImGui.IsMouseDragging(ImGuiMouseButton.Left))
                 {
                     var travel = Vector2.Max(Vector2.One, viewport.WorkSize - size);
@@ -44,12 +48,22 @@ internal sealed class CombatWindow(Configuration config, Action save, ITexturePr
                     config.Y = Math.Clamp((position.Y + ImGui.GetIO().MouseDelta.Y - viewport.WorkPos.Y) / travel.Y, 0, 1);
                 }
             }
+            var paper = position + new Vector2(20, config.LockLayout ? 84 : 108);
+            Paper(d, paper, new Vector2(size.X - 40, 56), 1, config.DarkPaper, false);
+            ImGui.SetCursorScreenPos(paper + new Vector2(12, 8));
+            ImGui.PushStyleColor(ImGuiCol.Text, V(config.DarkPaper ? Ivory : Ink));
             var actor = state.Vitals.Player;
-            ImGui.TextUnformatted($"HP {actor.Hp.Display}    {actor.Secondary.Label} {actor.Secondary.Display}");
+            ImGui.TextUnformatted($"{actor.Job}   ·   HP {actor.Hp.Display}   ·   {actor.Secondary.Label} {actor.Secondary.Display}");
+            var bar = ImGui.GetCursorScreenPos();
+            d.AddRectFilled(bar, bar + new Vector2(size.X - 66, 5), C(86, 77, 57, 80), 2);
+            d.AddRectFilled(bar, bar + new Vector2((size.X - 66) * actor.Hp.Fraction, 5), Aether, 2);
+            ImGui.PopStyleColor();
+            ImGui.SetCursorScreenPos(paper + new Vector2(0, 68));
             Cast(state.Vitals.Player.Cast, state.Age(now), "You"); Cast(state.Vitals.Target?.Cast, state.Age(now), state.Vitals.Target?.Name ?? "Target");
             Effects("You", state.Vitals.PlayerEffects, state.Age(now), false);
             if (state.Vitals.Target is not null) Effects("Target", state.Vitals.TargetEffects, state.Age(now), true);
-            ImGui.Separator();
+            Rule(d, ImGui.GetCursorScreenPos() + new Vector2(0, 4), size.X - 40, Gold, 1);
+            ImGui.Dummy(new Vector2(0, 12));
             for (var i = 0; i < state.Slots.Count; i++)
             {
                 var slot = state.Slots[i]; var cooldown = slot.Recast;
@@ -131,6 +145,8 @@ internal sealed class CombatWindow(Configuration config, Action save, ITexturePr
         var shown = SettingsOpen; ImGui.SetNextWindowSize(new(430, 0), ImGuiCond.FirstUseEver);
         if (ImGui.Begin("Combat HUD###XivHud.Combat.Settings", ref shown, ImGuiWindowFlags.AlwaysAutoResize))
         {
+            var dark = config.DarkPaper; if (ImGui.Checkbox("Dark vellum", ref dark)) { config.DarkPaper = dark; save(); }
+            var ornament = config.Ornament; if (ImGui.Checkbox("Brass ornament and stitching", ref ornament)) { config.Ornament = ornament; save(); }
             ImGui.TextWrapped("Your saved hotbars, native key hints, cooldowns and job resources. Native hotbars and gauges remain available.");
             var enabled = config.Enabled; if (ImGui.Checkbox("Show combat deck", ref enabled)) { config.Enabled = enabled; Preview = false; save(); }
             var preview = Preview; if (ImGui.Checkbox("Sample preview", ref preview)) Preview = preview;

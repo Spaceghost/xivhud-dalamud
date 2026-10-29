@@ -16,3 +16,21 @@ Rich item/map links remain in native chat; this module currently shows plain tex
 `XivHud.Chat.v1.Call` exposes queued window controls and `notification.push` with bounded title/text and kind (`Info`, `Message`, `Quest`, `Error`). It exposes no outbound chat operation. Cached status includes counts and window state, never message bodies or recipients. `/xivnav` discovers the module under Communication.
 
 Native chat input is guarded by the two reviewed FFXIVClientStructs assembly identities (15.0.3.6 and installed 15.0.3.9). Unknown bindings disable sending. Offline tests cover history, unread scope, Unicode limits, message validation, stale/changed-character sends, bounded notifications and IPC validation. Builds do not invoke native game code or send test messages. Live rendering, scrolling, actual chat submission, toast integration and unload/reload still require game acceptance.
+
+## Illustrated Umbra family
+
+The UI uses the Journal and Character materials: stitched leather bindings,
+brass compass ornament, vellum (light or dark), and Jupiter/Axis game fonts.
+Appearance settings control dark vellum and ornament. Existing settings and
+session-only chat privacy remain unchanged.
+
+`Umbra.XivHud.Chat` is the optional Umbra toolbar plugin. Its left click toggles
+the module; right click opens appearance. Ctrl+Shift+right-click remains Umbra's
+widget-settings shortcut. It polls readiness and handles provider reloads without
+owning game input. The underlying Dalamud module supplies the UI, game reads and
+explicit actions, just as Journal and Character do.
+
+Build: `tools/build.sh --references /path/to/reviewed/dalamud --umbra-references
+/path/to/installed/Umbra --test --locked`, then `tools/package.sh`. Add the adapter
+DLL in Umbra Settings → Plugins, restart Umbra, and add its widget. Family index:
+https://spacegho.st/mods/ffxiv/umbra/.

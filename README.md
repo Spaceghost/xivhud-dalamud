@@ -73,6 +73,10 @@ the repository, configures testing, installs the bundled libraries, enables the
 plugins and verifies loaded versions. Source builds and game acceptance remain
 separate concerns. The normal testing catalogue still excludes development modules.
 
+## Umbra UI family
+
+[The Umbra family](https://spacegho.st/mods/ffxiv/umbra/) gathers HUD, Journal, Character, Vitals, Combat and Correspondence. Journal, Character, Combat and Chat have optional `Umbra.XivHud.*` toolbar adapters. The Dalamud modules provide game data and UI; Umbra plugins supply toolbar controls. Build adapters with `--umbra-references /path/to/installed/Umbra`; packaging includes separate adapter DLLs.
+
 ## Shared mod workspace
 
 `/xivnav` opens the searchable mod shell for HUD modules, other installed mods

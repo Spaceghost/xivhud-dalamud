@@ -5,6 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 p = argparse.ArgumentParser()
 p.add_argument('--references', type=Path, default=Path(os.environ.get('DALAMUD_HOME', str(ROOT/'.dalamud'))))
+p.add_argument('--umbra-references', type=Path, help='Also build the optional Umbra toolbar plugins against this installed Umbra directory')
 p.add_argument('--test', action='store_true')
 p.add_argument('--offline-feed', type=Path)
 p.add_argument('--tests-only', action='store_true')
@@ -23,6 +24,9 @@ if not a.tests_only:
    raise SystemExit('Reviewed Dalamud '+reviewed['version']+' references required: '+name+' differs or is missing. Set --references; do not update the digest without reviewing native bindings.')
  for project in config['plugins']:
   subprocess.run([dotnet,'build',str(ROOT/project),*common,'-p:DalamudLibPath='+str(a.references.resolve())+'/'],cwd=ROOT,check=True)
+if a.umbra_references and not a.tests_only:
+ for project in config['umbra']:
+  subprocess.run([dotnet,'build',str(ROOT/project),*common,'-p:DalamudLibPath='+str(a.references.resolve())+'/','-p:UmbraLibPath='+str(a.umbra_references.resolve())+'/'],cwd=ROOT,check=True)
 if a.test or a.tests_only:
  for project in config['tests']:
   test_props = ['-p:SurfaceCoreProject='+str(ROOT/'src/XivSurface.Core/XivSurface.Core.csproj')] if 'FootAdapter.Tests' in project else []

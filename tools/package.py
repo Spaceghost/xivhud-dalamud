@@ -45,6 +45,13 @@ for item in config['packages']:
  if not item['installer'] or item.get('development', False):
   url='https://github.com/'+config['repo']+'/releases/download/development/'+artifact
   development.append({**manifest,'RepoUrl':'https://github.com/'+config['repo'],'DownloadLinkInstall':url,'DownloadLinkUpdate':url,'DownloadLinkTesting':url,'TestingAssemblyVersion':version,'TestingDalamudApiLevel':manifest['DalamudApiLevel'],'IsTestingExclusive':True,'LastUpdate':a.epoch})
+# Umbra loads its own extension DLLs, separately from the Dalamud modules.
+# Build with --umbra-references to publish these optional toolbar adapters.
+for project in config.get('umbra', []):
+ name = Path(project).stem
+ source = ROOT/'artifacts/bin'/name/'release'/(name+'.dll')
+ if source.is_file():
+  target = a.out/(name+'.dll'); target.write_bytes(source.read_bytes()); packages.append(target)
 (a.out/'pluginmaster-development.json').write_text(json.dumps(development,indent=2)+'\n')
 (a.out/'pluginmaster-testing.json').write_text(json.dumps(listing,indent=2)+'\n')
 (a.out/'build-info.json').write_text(json.dumps({'sourceCommit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'references':json.loads((ROOT/'tools/references.json').read_text()),'manualDevelopmentOnly':[i['manifest'] for i in config['packages'] if not i['installer']]},indent=2)+'\n')

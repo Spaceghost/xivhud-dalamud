@@ -6,6 +6,7 @@ using Dalamud.Plugin.Ipc;
 using Dalamud.Plugin.Services;
 using XivHud.Combat.Core;
 using XivHud.Protocol;
+using XivHud.Style;
 
 namespace XivHud.Combat;
 
@@ -19,12 +20,15 @@ public sealed class Plugin : IDalamudPlugin
     private readonly IGameGui game;
     private readonly IPluginLog log;
     private readonly Configuration config;
+    private readonly IllustratedChrome chrome;
     private readonly CombatData data;
     private readonly CombatWindow window;
     private readonly ConcurrentQueue<string> ui = new();
     private readonly ConcurrentQueue<SlotIdentity> actions = new();
     private readonly HudEndpoint endpoint = new("combat");
     private ICallGateProvider<string, string>? call;
+    private ICallGateProvider<object>? toggle, openSettings;
+    private ICallGateProvider<bool>? ready;
     private CombatSnapshot? snapshot;
     private long nextRead, nextPublish;
     private bool disposed, registered, readFailed, drawFailed;
@@ -37,10 +41,14 @@ public sealed class Plugin : IDalamudPlugin
         this.condition = condition; this.game = game; this.log = log;
         config = pi.GetPluginConfig() as Configuration ?? new(); config.Normalize();
         data = new(objects, targets, party, client, sheets, gauges);
-        window = new(config, Save, textures, token => { if (!disposed && actions.Count < 16) actions.Enqueue(token); });
+        chrome = new(pi);
+        window = new(chrome, config, Save, textures, token => { if (!disposed && actions.Count < 16) actions.Enqueue(token); });
         try
         {
             call = pi.GetIpcProvider<string, string>("XivHud.Combat.v1.Call"); call.RegisterFunc(endpoint.Call);
+            toggle = pi.GetIpcProvider<object>("XivHud.Combat.Toggle"); toggle.RegisterAction(() => Enqueue("toggle"));
+            openSettings = pi.GetIpcProvider<object>("XivHud.Combat.OpenSettings"); openSettings.RegisterAction(Settings);
+            ready = pi.GetIpcProvider<bool>("XivHud.Combat.Ready"); ready.RegisterFunc(() => !disposed);
             registered = commands.AddHandler("/xivcombat", new CommandInfo((_, text) => Enqueue(text.Trim().ToLowerInvariant()))
                 { HelpMessage = "Combat HUD: open, close, settings, preview. Mirrors saved hotbars; native bindings are unchanged." });
             if (!registered) throw new InvalidOperationException("/xivcombat is already registered");
@@ -60,6 +68,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         switch (command)
         {
+            case "toggle": Apply(config.Enabled ? "close" : "open"); break;
             case "open": config.Enabled = true; window.Preview = false; drawFailed = false; nextRead = 0; Save(); break;
             case "close": config.Enabled = false; window.Preview = window.SettingsOpen = false; snapshot = null; actions.Clear(); Save(); break;
             case "preview": window.Preview = !window.Preview; window.SettingsOpen = true; actions.Clear(); drawFailed = false; break;
@@ -104,7 +113,8 @@ public sealed class Plugin : IDalamudPlugin
         if (disposed) return; disposed = true;
         framework.Update -= Update; pi.UiBuilder.Draw -= Draw; client.Logout -= Logout;
         pi.UiBuilder.OpenMainUi -= Open; pi.UiBuilder.OpenConfigUi -= Settings;
-        call?.UnregisterFunc(); endpoint.Dispose(); if (registered) commands.RemoveHandler("/xivcombat");
+        toggle?.UnregisterAction(); openSettings?.UnregisterAction(); ready?.UnregisterFunc();
+        chrome.Dispose(); call?.UnregisterFunc(); endpoint.Dispose(); if (registered) commands.RemoveHandler("/xivcombat");
         snapshot = null; ui.Clear(); actions.Clear();
     }
 }

@@ -9,6 +9,7 @@ using Dalamud.Plugin.Ipc;
 using Dalamud.Plugin.Services;
 using XivHud.Chat.Core;
 using XivHud.Protocol;
+using XivHud.Style;
 
 namespace XivHud.Chat;
 
@@ -25,6 +26,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly ICondition condition;
     private readonly IPluginLog log;
     private readonly Configuration config;
+    private readonly IllustratedChrome chrome;
     private readonly ChatStore history = new();
     private readonly NotificationStore notices = new();
     private readonly ChatWindow window;
@@ -32,6 +34,8 @@ public sealed class Plugin : IDalamudPlugin
     private readonly ConcurrentQueue<SendIntent> outgoing = new();
     private readonly HudEndpoint endpoint = new("chat");
     private ICallGateProvider<string, string>? call;
+    private ICallGateProvider<object>? toggle, openSettings;
+    private ICallGateProvider<bool>? ready;
     private ulong player;
     private long nextPublish;
     private bool disposed, registered, drawFailed;
@@ -42,13 +46,17 @@ public sealed class Plugin : IDalamudPlugin
         this.pi = pi; this.commands = commands; this.framework = framework; this.client = client;
         this.objects = objects; this.chat = chat; this.toast = toast; this.game = game; this.condition = condition; this.log = log;
         config = pi.GetPluginConfig() as Configuration ?? new();
-        window = new(config, history, notices, Save, QueueSend);
+        chrome = new(pi);
+        window = new(chrome, config, history, notices, Save, QueueSend);
         try
         {
             registered = commands.AddHandler("/xivchat", new CommandInfo((_, text) => Enqueue(text.Trim().ToLowerInvariant()))
                 { HelpMessage = "Conversations and notifications: open, close, settings, preview, off, clear. Native chat is unchanged." });
             if (!registered) throw new InvalidOperationException("/xivchat is already registered");
             call = pi.GetIpcProvider<string, string>("XivHud.Chat.v1.Call"); call.RegisterFunc(endpoint.Call);
+            toggle = pi.GetIpcProvider<object>("XivHud.Chat.Toggle"); toggle.RegisterAction(() => Enqueue("toggle"));
+            openSettings = pi.GetIpcProvider<object>("XivHud.Chat.OpenSettings"); openSettings.RegisterAction(Settings);
+            ready = pi.GetIpcProvider<bool>("XivHud.Chat.Ready"); ready.RegisterFunc(() => !disposed);
             chat.ChatMessageUnhandled += Message;
             toast.Toast += NormalToast; toast.QuestToast += QuestToast; toast.ErrorToast += ErrorToast;
             framework.Update += Update; client.Logout += Logout; pi.UiBuilder.Draw += Draw;
@@ -67,6 +75,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         switch (value)
         {
+            case "toggle": Apply(window.Open ? "close" : "open"); break;
             case "open": config.Enabled = true; window.Open = true; window.Preview = false; drawFailed = false; Save(); break;
             case "close": window.Open = window.Preview = false; break;
             case "off": config.Enabled = false; window.Open = window.Preview = false; outgoing.Clear(); window.Sending = false; history.Clear(); notices.Clear(); Save(); break;
@@ -154,7 +163,8 @@ public sealed class Plugin : IDalamudPlugin
         toast.Toast -= NormalToast; toast.QuestToast -= QuestToast; toast.ErrorToast -= ErrorToast;
         framework.Update -= Update; client.Logout -= Logout; pi.UiBuilder.Draw -= Draw;
         pi.UiBuilder.OpenMainUi -= Open; pi.UiBuilder.OpenConfigUi -= Settings;
-        call?.UnregisterFunc(); endpoint.Dispose(); if (registered) commands.RemoveHandler("/xivchat");
+        toggle?.UnregisterAction(); openSettings?.UnregisterAction(); ready?.UnregisterFunc();
+        chrome.Dispose(); call?.UnregisterFunc(); endpoint.Dispose(); if (registered) commands.RemoveHandler("/xivchat");
         history.Clear(); notices.Clear(); outgoing.Clear(); ui.Clear();
     }
 }

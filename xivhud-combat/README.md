@@ -35,3 +35,21 @@ Offline tests cover action identity, stale/future input, native bounds, preview
 isolation, charge calculations and snapshot expiry. The plugin compiles against
 both reference sets. Live action correctness, charge timing, job gauges, bar
 appearance and mouse/controller ergonomics still require in-game acceptance.
+
+## Illustrated Umbra family
+
+The UI uses the Journal and Character materials: stitched leather bindings,
+brass compass ornament, vellum (light or dark), and Jupiter/Axis game fonts.
+Appearance settings control dark vellum and ornament. Existing settings and
+session-only chat privacy remain unchanged.
+
+`Umbra.XivHud.Combat` is the optional Umbra toolbar plugin. Its left click toggles
+the module; right click opens appearance. Ctrl+Shift+right-click remains Umbra's
+widget-settings shortcut. It polls readiness and handles provider reloads without
+owning game input. The underlying Dalamud module supplies the UI, game reads and
+explicit actions, just as Journal and Character do.
+
+Build: `tools/build.sh --references /path/to/reviewed/dalamud --umbra-references
+/path/to/installed/Umbra --test --locked`, then `tools/package.sh`. Add the adapter
+DLL in Umbra Settings → Plugins, restart Umbra, and add its widget. Family index:
+https://spacegho.st/mods/ffxiv/umbra/.

@@ -6,6 +6,8 @@ namespace XivHud.Combat;
 public sealed class Configuration : IPluginConfiguration
 {
     public int Version { get; set; } = 1;
+    public bool DarkPaper { get; set; }
+    public bool Ornament { get; set; } = true;
     public bool Enabled { get; set; }
     public bool Cross { get; set; }
     public int FirstBar { get; set; } = 1;
