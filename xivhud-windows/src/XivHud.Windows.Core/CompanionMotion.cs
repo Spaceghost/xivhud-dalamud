@@ -10,7 +10,7 @@ public sealed class CompanionMotion
 {
     private bool initialized;
     private Vector3 previousPlayer, position, velocity;
-    private float heading, speed, time, orbitPhase, calm;
+    private float heading, speed, time, calm;
     public Vector3 Position => position;
     public Vector3 Velocity => velocity;
     public float Speed => speed;
@@ -18,7 +18,7 @@ public sealed class CompanionMotion
     public void Reset() => initialized = false;
 
     public Vector3 Update(Vector3 player, float facing, float deltaTime, int order,
-        float width, float height, bool held = false, bool orbit = false, bool reduce = false)
+        float width, float height, bool held = false, bool reduce = false)
     {
         if (!Finite(player) || !float.IsFinite(facing) || !float.IsFinite(deltaTime)) return position;
         var dt = Math.Clamp(deltaTime, 0, .1f);
@@ -37,14 +37,13 @@ public sealed class CompanionMotion
         previousPlayer = player;
         time += dt;
         calm += ((held ? 1 : 0) - calm) * (1 - MathF.Exp(-dt / .25f));
-        if (orbit && !held && !reduce) orbitPhase = Wrap(orbitPhase + dt * .25f);
         var level = order / 2;
         var side = order % 2 == 0 ? 1 : -1;
         var run = Math.Clamp((speed - .6f) / 4.9f, 0, 1);
         var angle = 1.45f + level * .55f + (reduce ? 0 : run * .35f);
         var maxAngle = MathF.PI - .8f;
         var extra = MathF.Max(0, MathF.Ceiling((angle - maxAngle) / .55f)) * 1.1f;
-        angle = heading + side * MathF.Min(angle, maxAngle) + (orbit ? orbitPhase : 0);
+        angle = heading + side * MathF.Min(angle, maxAngle);
         var radius = MathF.Max(2.3f, width / 2 + .9f) + extra + level * .55f;
         var phase = order * 2.399963f;
         var bob = reduce ? 0 : .02f * MathF.Sin(time * .6f + phase) * (1 - calm);

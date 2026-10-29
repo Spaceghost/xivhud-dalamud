@@ -31,6 +31,8 @@ public static class WindowIdentity
     public static bool Valid(string? name) => name is { Length: > 0 and <= 512 } && name == name.Trim() && !name.Any(char.IsControl)
         && !name.StartsWith("##", StringComparison.Ordinal) && (!name.Contains("###", StringComparison.Ordinal) || name.IndexOf("###", StringComparison.Ordinal) + 3 < name.Length);
     public static string Key(string name) => name.Contains("###", StringComparison.Ordinal) ? name[(name.IndexOf("###", StringComparison.Ordinal) + 3)..] : name;
+    // Accept the old input as a compatibility alias; it never circles.
+    public static string NormalizePlacement(string placement) => placement == "orbit" ? "pet" : placement;
     public static readonly string[] Placements = ["pet", "orbit", "hud", "here", "ground"];
 }
 

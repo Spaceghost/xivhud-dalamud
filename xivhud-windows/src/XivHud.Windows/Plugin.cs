@@ -190,7 +190,7 @@ public sealed unsafe class Plugin : IAsyncDalamudPlugin
                             if (root.IsNull) throw new InvalidOperationException("Source window is not drawn yet");
                             ImGuiP.FocusWindow(root); focused = panel.Id;
                         }
-                        else { if (panel.Placement != op.Placement) panel.Motion.Reset(); panel.Placement = op.Placement; if (objects.LocalPlayer is { } local) panel.Anchor = local.Position + new Vector3(0, .6f, 0); }
+                        else { var placement = WindowIdentity.NormalizePlacement(op.Placement); if (panel.Placement != placement) panel.Motion.Reset(); panel.Placement = placement; if (objects.LocalPlayer is { } local) panel.Anchor = local.Position + new Vector3(0, .6f, 0); }
                         break;
                 }
                 results[op.Id] = new { request = op.Id, ok = true };
@@ -226,7 +226,7 @@ public sealed unsafe class Plugin : IAsyncDalamudPlugin
             EnsureHooks(); Process();
             if (zone != client.TerritoryType) { foreach (var item in panels.ToArray()) if (item.Placement is "here" or "ground") Release(item); else item.Motion.Reset(); zone = client.TerritoryType; }
             var companionOrder = 0;
-            foreach (var item in panels) { var order = item.Placement is "pet" or "orbit" ? companionOrder++ : 0; item.Visible = Allowed && Project(item, order); if (item.Visible && item.Texture is { } texture && item.Captured) DrawPanel(item, texture); }
+            foreach (var item in panels) { var order = item.Placement == "pet" ? companionOrder++ : 0; item.Visible = Allowed && Project(item, order); if (item.Visible && item.Texture is { } texture && item.Captured) DrawPanel(item, texture); }
             var nav = ImGui.GetCurrentContext().NavWindow;
             if (focused != 0 && !panels.Any(p => { var root = ImGuiP.FindWindowByName(p.Name); return p.Id == focused && !root.IsNull && !nav.IsNull && (nav == root || nav.RootWindow == root || nav.RootWindowPopupTree == root); })) focused = 0;
             if (open) Manager();
@@ -248,11 +248,11 @@ public sealed unsafe class Plugin : IAsyncDalamudPlugin
             item.Quad = new(a, a + new Vector2(size.X, 0), a + size, a + new Vector2(0, size.Y)); return true;
         }
         if (objects.LocalPlayer is not { } player) return false;
-        var companion = item.Placement is "pet" or "orbit";
+        var companion = item.Placement == "pet";
         var held = focused == item.Id || (item.Visible && item.Quad.TryUv(realMouse, out _));
         var center = companion
             ? item.Motion.Update(player.Position, player.Rotation, ImGui.GetIO().DeltaTime, companionOrder,
-                item.Width, height, held, item.Placement == "orbit", config.ReduceMotion)
+                item.Width, height, held, config.ReduceMotion)
             : item.Anchor;
         var horizontal = Vector3.UnitX;
         if (game.WorldToScreen(center, out var middle, out _) && game.WorldToScreen(center + Vector3.UnitX, out var x, out _) && game.WorldToScreen(center + Vector3.UnitZ, out var z, out _))
@@ -288,9 +288,9 @@ public sealed unsafe class Plugin : IAsyncDalamudPlugin
                 if (!item.MouseDisabled) { item.OriginalFlags = root.Flags; item.MouseDisabled = true; }
                 if (!root.Active || root.Hidden || !Allowed) { item.Captured = false; root.Flags |= ImGuiWindowFlags.NoMouseInputs; continue; }
                 item.Position = root.Pos; item.Size = root.Size;
-                // A companion can orbit outside the camera. Keep its source hosted there,
+                // A companion can move outside the camera. Keep its source hosted there,
                 // rather than flashing the ordinary window at its old screen position.
-                var followingOutsideView = item.Placement is "pet" or "orbit";
+                var followingOutsideView = item.Placement == "pet";
                 if ((!item.Visible || !item.Quad.Valid) && !followingOutsideView) { item.Captured = false; item.Status = "Screen fallback · placement unavailable"; RestoreFlags(item); continue; }
                 var captured = NativeWindowCapture.DrawExpanded(item.Name, frame =>
                 {
@@ -377,7 +377,7 @@ public sealed unsafe class Plugin : IAsyncDalamudPlugin
         {
             if (!drew) return;
             ImGui.TextColored(V(PaleGold), "FLOATING WINDOWS");
-            ImGui.TextWrapped("Select an open plugin window. Follow me trails on springs like Ghostty companion windows; Orbit circles slowly. Use Screen to recover it.");
+            ImGui.TextWrapped("Select an open plugin window. Follow me hovers near your character and trails on springs as you move. Use Screen to recover it.");
             var reduceMotion = config.ReduceMotion;
             if (ImGui.Checkbox("Reduce motion", ref reduceMotion)) { config.ReduceMotion = reduceMotion; pi.SavePluginConfig(config); }
             if (Environment.TickCount64 >= nextList)
@@ -397,7 +397,7 @@ public sealed unsafe class Plugin : IAsyncDalamudPlugin
                 ImGui.PushID(item.Id);
                 ImGui.TextUnformatted(item.Name.Split("###")[0]);
                 ImGui.TextDisabled(item.Status);
-                foreach (var (label, pin) in new[] { ("Follow me", "pet"), ("Orbit", "orbit"), ("View", "hud"), ("Here", "here"), ("Ground", "ground") })
+                foreach (var (label, pin) in new[] { ("Follow me", "pet"), ("View", "hud"), ("Here", "here"), ("Ground", "ground") })
                 { if (ImGui.SmallButton(label)) Enqueue("panel.place", id: item.Id, placement: pin); ImGui.SameLine(); }
                 if (ImGui.SmallButton("Screen")) Enqueue("release", item.Name);
                 ImGui.SliderFloat("Width (world units)", ref item.Width, .5f, 6);

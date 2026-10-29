@@ -1,6 +1,6 @@
 # Independent floating-window acceptance
 
-The family builds against its reviewed Dalamud references. All 559 tests across
+The family builds against its reviewed Dalamud references. All 560 tests across
 11 offline suites passed on 2026-10-29. The eight optional Umbra adapters build
 against installed Umbra 3.1.18.0. Locked builds complete without warnings.
 
@@ -76,3 +76,15 @@ was restored after recording, along with Combat, Vitals and the quest tracker.
 This change matches the companion motion tuning. Ghostty's curved panels,
 world-collision reactions, depth occlusion and other presentation effects have
 not been ported to the standalone host.
+
+## Stable hover correction — 0.1.0.7
+
+Current companions hover in an assigned area near the character. They trail
+movement and ease around turns, then settle; they never continuously circle.
+The Orbit button and time-driven angular motion were removed. Old `orbit` IPC
+or slash requests now select the same `pet` hover placement. The older 0.1.0.6
+clip above is historical evidence of the superseded option, not current behavior.
+
+The Windows suite now has 26 passing tests, including a two-minute idle simulation
+that stays in the same horizontal area and a legacy-request compatibility check.
+The other family suites are unchanged (560 tests in total).

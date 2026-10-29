@@ -6,8 +6,8 @@ namespace XivHud.Windows.Tests;
 public class CompanionMotionTests
 {
     private static Vector3 Step(CompanionMotion motion, Vector3 player, float facing = 0,
-        float dt = 1f / 60, int order = 0, bool held = true, bool orbit = false, bool reduce = false)
-        => motion.Update(player, facing, dt, order, 1.2f, .8f, held, orbit, reduce);
+        float dt = 1f / 60, int order = 0, bool held = true, bool reduce = false)
+        => motion.Update(player, facing, dt, order, 1.2f, .8f, held, reduce);
 
     [Fact] public void RunningTrailsBehindAndSettlesAfterStopping()
     {
@@ -62,16 +62,23 @@ public class CompanionMotionTests
         Assert.True(later.Position.Z < first.Position.Z);
     }
 
-    [Fact] public void ExplicitOrbitCirclesButPausesWhileReading()
+    [Fact] public void UnfocusedHoverStaysInItsAreaWithoutCircling()
     {
         var motion = new CompanionMotion();
-        var initial = Step(motion, Vector3.Zero, held: false, orbit: true);
-        for (var i = 0; i < 360; i++) Step(motion, Vector3.Zero, held: false, orbit: true);
-        Assert.True(Vector3.Distance(initial, motion.Position) > 2);
-        for (var i = 0; i < 360; i++) Step(motion, Vector3.Zero, orbit: true);
-        var settled = motion.Position;
-        for (var i = 0; i < 120; i++) Step(motion, Vector3.Zero, orbit: true);
-        Assert.InRange(Vector3.Distance(settled, motion.Position), 0, .001f);
+        var initial = Step(motion, Vector3.Zero, held: false);
+        for (var i = 0; i < 60 * 120; i++)
+        {
+            var position = Step(motion, Vector3.Zero, held: false);
+            Assert.InRange(Vector2.Distance(new(initial.X, initial.Z), new(position.X, position.Z)), 0, .001f);
+            Assert.InRange(MathF.Abs(position.Y - initial.Y), 0, .041f);
+        }
+    }
+
+    [Fact] public void LegacyOrbitRequestsSelectTheSameStableHoverPlacement()
+    {
+        Assert.Equal("pet", WindowIdentity.NormalizePlacement("orbit"));
+        Assert.Equal("pet", WindowIdentity.NormalizePlacement("pet"));
+        Assert.Equal("hud", WindowIdentity.NormalizePlacement("hud"));
     }
 
     [Theory] [InlineData(30)] [InlineData(60)] [InlineData(144)]
@@ -96,12 +103,12 @@ public class CompanionMotionTests
         Assert.InRange(Vector3.Distance(Step(motion, Vector3.Zero), Vector3.Zero), 2, 4);
     }
 
-    [Fact] public void ReducedMotionRemovesTrailingBobbingAndAutomaticOrbit()
+    [Fact] public void ReducedMotionRemovesTrailingAndBobbing()
     {
         var motion = new CompanionMotion();
-        var initial = Step(motion, Vector3.Zero, held: false, orbit: true, reduce: true);
+        var initial = Step(motion, Vector3.Zero, held: false, reduce: true);
         var player = new Vector3(0, 0, 6);
-        for (var i = 0; i < 120; i++) Step(motion, player, held: false, orbit: true, reduce: true);
+        for (var i = 0; i < 120; i++) Step(motion, player, held: false, reduce: true);
         Assert.InRange(Vector3.Distance(initial + player, motion.Position), 0, .001f);
         Assert.Equal(Vector3.Zero, motion.Velocity);
     }

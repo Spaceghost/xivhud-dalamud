@@ -6,13 +6,13 @@ belongs to its original plugin; this module owns only capture, placement and
 pointer mapping. It creates zero terminal sessions.
 
 Open `/xivwindows`, choose an open source window and select **Float selected**.
-Choose **Follow me**, **Orbit**, **View**, **Here** or **Ground**. **Screen** restores one
+Choose **Follow me**, **View**, **Here** or **Ground**. **Screen** restores one
 source. `/xivwindows screen` recovers every source. Explicit adoption and release
 also accept an exact window name after `/xivwindows adopt ` or `release `.
 Closing or unloading this host restores ordinary source rendering and a visible source position. No adoption
 is automatic, and no window placements are persisted in this first version.
 
-## Following and orbiting
+## Hovering near your character
 
 Follow me is the default companion placement (`pet`). It uses Ghostty's pet
 motion tuning: 2.3-unit radius and default width, shoulder-height placement, stiffness 5 and damping
@@ -25,12 +25,15 @@ than flashing its ordinary screen window. Screen recovery remains available.
 The bounded spring is integrated in steps of at most 1/120 second, with a 0.1-second
 hitch bound, a personal-space guard and reset on teleport/zone changes.
 
-Orbit (`orbit`) continuously circles at 0.25 radians/second. Hovering or focusing
-it pauses the orbit and eases out the small idle bob; follow movement still works.
-The persisted **Reduce motion** setting removes trailing, bob and automatic orbit.
-Use `/xivwindows place ID pet` or `orbit`, or the manager's buttons. Existing View,
-Here and Ground placements are unchanged. This ports the companion motion, not
-Ghostty's wall collision, panel curvature, scene shadows or depth occlusion.
+The window stays in its assigned area while you are idle, with only a small
+vertical bob. It eases around you in response to movement and turns; it never
+continuously circles. Hovering or focusing calms the bob. The persisted **Reduce
+motion** setting removes trailing and bob. Use `/xivwindows place ID pet` or the
+manager's **Follow me** button. Legacy `orbit` requests are accepted as an alias
+for this same hover behavior. View, Here and Ground are unchanged.
+
+This ports the companion follow motion, not Ghostty's wall collision, panel
+curvature, scene shadows or depth occlusion.
 
 Capture runs at ImGui RenderPre, after all plugins have drawn. It includes the
 selected root, children and owned popup trees, submits one draw-list texture,
