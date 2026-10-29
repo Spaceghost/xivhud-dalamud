@@ -50,7 +50,7 @@ public sealed unsafe class Plugin : IDalamudPlugin
     private readonly ImGuiContextHookCallback renderHook, inputHook;
     private ImGuiContextPtr context;
     private uint renderId, inputId;
-    private int serial, focused;
+    private int serial, focused, lastCaptureFrame = -1;
     private long requestSerial;
     private bool open, disposed, registered, remapped;
     private Vector2 realMouse;
@@ -225,7 +225,7 @@ public sealed unsafe class Plugin : IDalamudPlugin
             if (open) Manager();
             snapshot = JsonSerializer.Serialize(new { version = 1, module = "windows", observedAt = DateTimeOffset.UtcNow,
                 state = new { ready = true, loggedIn = client.IsLoggedIn, terminals = 0, count = panels.Count, window = new { open, actualMode = "screen", requestedMode = "screen" }, recoveryCommand = "/xivwindows screen" } });
-            panelSnapshot = JsonSerializer.Serialize(new { panels = panels.Select(i => new { id = i.Id, kind = "adopted", app = i.Name, title = i.Name.Split("###")[0], view = i.Placement == "pet" ? "world" : i.Placement, focused = focused == i.Id, status = i.Status }), requests = results.Values.ToArray() });
+            panelSnapshot = JsonSerializer.Serialize(new { panels = panels.Select(i => new { id = i.Id, kind = "adopted", app = i.Name, title = i.Name.Split("###")[0], view = i.Placement == "pet" ? "world" : i.Placement, focused = focused == i.Id, presented = i.Visible && i.Captured, sourcePosition = new[] { i.Position.X, i.Position.Y }, sourceSize = new[] { i.Size.X, i.Size.Y }, status = i.Status }), requests = results.Values.ToArray() });
         }
         catch (Exception e) { message = e.Message; log.Warning(e, "Floating windows frame failed; recovering screen windows"); foreach (var item in panels.ToArray()) Release(item); }
     }
@@ -243,7 +243,7 @@ public sealed unsafe class Plugin : IDalamudPlugin
         if (objects.LocalPlayer is not { } player) return false;
         var center = item.Placement == "pet" ? player.Position + new Vector3(1.5f + (item.Id - 1) % 3 * .7f, 1.8f, 0) : item.Anchor;
         var horizontal = Vector3.UnitX;
-        if (game.WorldToScreen(center, out var middle) && game.WorldToScreen(center + Vector3.UnitX, out var x) && game.WorldToScreen(center + Vector3.UnitZ, out var z))
+        if (game.WorldToScreen(center, out var middle, out _) && game.WorldToScreen(center + Vector3.UnitX, out var x, out _) && game.WorldToScreen(center + Vector3.UnitZ, out var z, out _))
         {
             var axis = new Vector3(x.X - middle.X, 0, z.X - middle.X);
             if (axis.LengthSquared() > .001f) horizontal = Vector3.Normalize(axis);
@@ -251,8 +251,8 @@ public sealed unsafe class Plugin : IDalamudPlugin
         var right = horizontal * item.Width / 2;
         var up = item.Placement == "ground" ? new Vector3(-right.Z, 0, right.X) * height / item.Width : new Vector3(0, height / 2, 0);
         if (item.Placement == "ground") center.Y = player.Position.Y + .05f;
-        if (!game.WorldToScreen(center - right + up, out var a0) || !game.WorldToScreen(center + right + up, out var b)
-            || !game.WorldToScreen(center + right - up, out var c) || !game.WorldToScreen(center - right - up, out var d)) return false;
+        if (!game.WorldToScreen(center - right + up, out var a0, out _) || !game.WorldToScreen(center + right + up, out var b, out _)
+            || !game.WorldToScreen(center + right - up, out var c, out _) || !game.WorldToScreen(center - right - up, out var d, out _)) return false;
         item.Quad = new(a0, b, c, d); return item.Quad.Valid;
     }
     private void DrawPanel(Panel item, IDrawListTextureWrap texture)
@@ -264,6 +264,8 @@ public sealed unsafe class Plugin : IDalamudPlugin
     private void Render(ImGuiContext* ctx, ImGuiContextHook* hook)
     {
         if (disposed || context.IsNull || ctx != context.Handle) return;
+        if (context.FrameCount == lastCaptureFrame) return;
+        lastCaptureFrame = context.FrameCount;
         foreach (var item in panels)
         {
             try
@@ -284,11 +286,10 @@ public sealed unsafe class Plugin : IDalamudPlugin
                 });
                 item.Captured = captured;
                 item.Status = captured ? "Floating · no terminal" : "Waiting for content";
-                root.Flags |= ImGuiWindowFlags.NoMouseInputs;
+                root.Flags |= ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoMove;
             }
             catch (Exception e) { item.Captured = false; item.Status = "Screen fallback · " + e.Message; RestoreFlags(item); }
         }
-        if (remapped) ImGui.GetIO().MousePos = realMouse;
     }
     private void Input(ImGuiContext* ctx, ImGuiContextHook* hook)
     {
@@ -381,6 +382,7 @@ public sealed unsafe class Plugin : IDalamudPlugin
     {
         var root = ImGuiP.FindWindowByName(item.Name);
         if (!root.IsNull && item.MouseDisabled && (item.OriginalFlags & ImGuiWindowFlags.NoMouseInputs) == 0) root.Flags &= ~ImGuiWindowFlags.NoMouseInputs;
+        if (!root.IsNull && item.MouseDisabled && (item.OriginalFlags & ImGuiWindowFlags.NoMove) == 0) root.Flags &= ~ImGuiWindowFlags.NoMove;
         item.MouseDisabled = false;
     }
     private void Release(Panel item)
