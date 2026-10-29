@@ -1,13 +1,17 @@
 using System.Numerics;
+using XivHud.Protocol;
+using XivHud.Style;
 using Dalamud.Bindings.ImGui;
 using XivHud.Chat.Core;
-using XivHud.Style;
 using static XivHud.Style.IllustratedStyle;
 
 namespace XivHud.Chat;
 
 internal sealed class ChatWindow(IllustratedChrome chrome, Configuration config, ChatStore history, NotificationStore notices, Action save, Action<ChatChannel, string, string> send)
 {
+    private readonly WorkspaceLayout workspace = new();
+    internal ScreenLayout? Layout => workspace.Current;
+    internal void SetScreenLayout(ScreenLayout rect) => workspace.Queue(rect);
     internal bool Open, SettingsOpen, Preview;
     internal volatile bool Sending;
     internal volatile string? SentDraft;
@@ -43,10 +47,12 @@ internal sealed class ChatWindow(IllustratedChrome chrome, Configuration config,
         ImGui.SetNextWindowSizeConstraints(Vector2.Min(new(680, 480), available), available);
         var shown = Open;
         var flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
+        workspace.ApplyNext();
         var drew = ImGui.Begin("Adventurer's Correspondence###XivHud.Chat", ref shown, flags);
         try
         {
             if (!drew) return;
+            workspace.Observe();
             var p = ImGui.GetWindowPos(); var size = ImGui.GetWindowSize(); var d = ImGui.GetWindowDrawList();
             Frame(d, p, size, 1, config.Ornament);
             chrome.Title(p + new Vector2(12, 9), "Correspondence", "Conversations, letters and small tidings.", Preview);

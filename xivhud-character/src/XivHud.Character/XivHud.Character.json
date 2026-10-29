@@ -2,7 +2,7 @@
   "Author": "Johnneylee Jack Rollins",
   "Name": "XivHud \u00b7 Character",
   "InternalName": "XivHud.Character",
-  "AssemblyVersion": "0.1.0.2",
+  "AssemblyVersion": "0.1.0.3",
   "Punchline": "An adventurer's record for an Umbra-centered Eorzea.",
   "Description": "A richly detailed character sheet: equipped gear with materia and condition, attributes for your current role, every class and job with experience, and your gear sets. Open from Umbra, the game's Character action, or /xivcharacter. The original character window remains available.",
   "ApplicableVersion": "any",

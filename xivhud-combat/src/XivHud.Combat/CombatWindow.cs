@@ -1,10 +1,11 @@
 using System.Numerics;
+using XivHud.Protocol;
+using XivHud.Style;
 using System.Text.RegularExpressions;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures;
 using Dalamud.Plugin.Services;
 using XivHud.Combat.Core;
-using XivHud.Style;
 using XivHud.Vitals.Core;
 using static XivHud.Style.IllustratedStyle;
 
@@ -12,6 +13,9 @@ namespace XivHud.Combat;
 
 internal sealed class CombatWindow(IllustratedChrome chrome, Configuration config, Action save, ITextureProvider textures, Action<SlotIdentity> execute)
 {
+    private readonly WorkspaceLayout workspace = new();
+    internal ScreenLayout? Layout => workspace.Current;
+    internal void SetScreenLayout(ScreenLayout rect) => workspace.Queue(rect);
     internal bool Preview, SettingsOpen;
     internal string Status = "Disabled", ActionStatus = "";
     internal void Draw(CombatSnapshot? snapshot, bool allowed)
@@ -25,6 +29,16 @@ internal sealed class CombatWindow(IllustratedChrome chrome, Configuration confi
     private void Deck(CombatSnapshot state, long now, bool allowed)
     {
         var viewport = ImGui.GetMainViewport(); var cols = state.Cross ? 8 : 12;
+        if (workspace.Take() is { } requested)
+        {
+            config.Scale = Math.Clamp(((requested.Width * viewport.WorkSize.X - 56) / cols - 5) / 45, .65f, 2);
+            var pixels = Math.Max(12, Math.Min(45f * config.Scale, (viewport.WorkSize.X - 56) / cols - 5));
+            var widthFraction = Math.Min(1, (cols * (pixels + 5) + 56) / viewport.WorkSize.X);
+            var heightFraction = Math.Min(1, (286 + (int)Math.Ceiling(state.Slots.Count / (double)cols) * (pixels + 5)) / viewport.WorkSize.Y);
+            config.X = requested.X / Math.Max(.001f, 1 - widthFraction);
+            config.Y = requested.Y / Math.Max(.001f, 1 - heightFraction);
+            config.Normalize(); save();
+        }
         var slotSize = Math.Max(12, Math.Min(45f * config.Scale, (viewport.WorkSize.X - 56) / cols - 5)); var width = cols * (slotSize + 5) + 56; var height = 286 + (int)Math.Ceiling(state.Slots.Count / (double)cols) * (slotSize + 5);
         var size = new Vector2(Math.Min(width, viewport.WorkSize.X), Math.Min(height, viewport.WorkSize.Y));
         var position = viewport.WorkPos + Vector2.Max(Vector2.Zero, viewport.WorkSize - size) * new Vector2(config.X, config.Y);
@@ -36,6 +50,7 @@ internal sealed class CombatWindow(IllustratedChrome chrome, Configuration confi
         try
         {
             if (!drew) return;
+            workspace.Observe();
             position = ImGui.GetWindowPos(); size = ImGui.GetWindowSize();
             var d = ImGui.GetWindowDrawList();
             d.PushClipRect(position, position + size, false);

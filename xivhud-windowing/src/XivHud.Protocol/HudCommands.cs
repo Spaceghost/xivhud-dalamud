@@ -15,10 +15,11 @@ public static class HudCommands
     public static string[] Methods(string module) => module switch
     {
         "hud" => ["hud.set_enabled", "window.settings", "window.close", "navigator.open", "navigator.close"],
-        "journal" => ["window.open", "window.close", "window.settings", "window.mode", "window.original", "journal.select", "journal.bookmark", "journal.show_map", "journal.tracker"],
-        "character" => ["window.open", "window.close", "window.settings", "window.mode", "window.original", "character.page"],
-        "chat" => ["window.open", "window.close", "window.settings", "notification.push"],
-        "vitals" or "combat" or "inventory" or "crafting" or "windows" => ["window.open", "window.close", "window.settings"],
+        "journal" => ["window.open", "window.close", "window.settings", "window.layout", "window.mode", "window.original", "journal.select", "journal.bookmark", "journal.show_map", "journal.tracker"],
+        "character" => ["window.open", "window.close", "window.settings", "window.layout", "window.mode", "window.original", "character.page"],
+        "chat" => ["window.open", "window.close", "window.settings", "window.layout", "notification.push"],
+        "combat" => ["window.open", "window.close", "window.settings", "window.layout"],
+        "vitals" or "inventory" or "crafting" or "windows" => ["window.open", "window.close", "window.settings"],
         _ => [],
     };
 
@@ -31,6 +32,7 @@ public static class HudCommands
         {
             "hud.set_enabled" => ["enabled"],
             "notification.push" => ["title", "text", "kind"],
+            "window.layout" => ["x", "y", "width", "height"],
             "window.mode" => ["mode", "placement"],
             "journal.select" or "journal.show_map" => ["questId"],
             "journal.bookmark" => ["questId", "bookmarked"],
@@ -41,6 +43,12 @@ public static class HudCommands
         var seen = new HashSet<string>(StringComparer.Ordinal);
         foreach (var field in p.EnumerateObject())
             if (!fields.Contains(field.Name) || !seen.Add(field.Name)) return "unknown_or_duplicate_parameter";
+        if (command.Method == "window.layout")
+        {
+            foreach (var key in fields)
+                if (!p.TryGetProperty(key, out var number) || number.ValueKind != JsonValueKind.Number || !number.TryGetSingle(out var value) || !float.IsFinite(value)) return "invalid_screen_layout";
+            if (!ScreenLayout.Read(p).Valid) return "invalid_screen_layout";
+        }
         if (command.Method == "notification.push")
         {
             if (!p.TryGetProperty("title", out var title) || title.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(title.GetString()) || title.GetString()!.Length > 100) return "invalid_notification_title";

@@ -118,6 +118,7 @@ public sealed class Plugin : IDalamudPlugin
         if (disposed) return;
         endpoint.Process(c =>
         {
+            if (c.Method == "window.layout") { window.SetScreenLayout(ScreenLayout.Read(c.Parameters)); return null; }
             if (c.Method == "notification.push")
             {
                 if (!config.Enabled || !config.Notifications) return "notifications_disabled";
@@ -147,7 +148,7 @@ public sealed class Plugin : IDalamudPlugin
             endpoint.Publish(new { ready = !drawFailed, loggedIn = client.IsLoggedIn, enabled = config.Enabled,
                 unread = history.Unread(ChatChannel.All), messages = history.Snapshot().Count, notifications = notices.Active(Environment.TickCount64, NotificationStore.Capacity).Count,
                 settingsOpen = window.SettingsOpen, preview = window.Preview,
-                window = new { open = window.Open, actualMode = "screen", requestedMode = "screen" }, recoveryCommand = "/xivchat off" });
+                window = new { layout = window.Layout, open = window.Open, actualMode = "screen", requestedMode = "screen" }, recoveryCommand = "/xivchat off" });
         }
     }
     private void Draw()

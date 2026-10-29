@@ -1,8 +1,8 @@
 <Project Sdk="Dalamud.NET.Sdk/15.0.0">
-  <PropertyGroup><AssemblyName>XivHud.Chat</AssemblyName><RootNamespace>XivHud.Chat</RootNamespace><Version>0.1.0.3</Version><AllowUnsafeBlocks>true</AllowUnsafeBlocks><TreatWarningsAsErrors>true</TreatWarningsAsErrors></PropertyGroup>
+  <PropertyGroup><AssemblyName>XivHud.Chat</AssemblyName><RootNamespace>XivHud.Chat</RootNamespace><Version>0.1.0.4</Version><AllowUnsafeBlocks>true</AllowUnsafeBlocks><TreatWarningsAsErrors>true</TreatWarningsAsErrors></PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../XivHud.Chat.Core/XivHud.Chat.Core.csproj" />
     <ProjectReference Include="../../../xivhud-windowing/src/XivHud.Protocol/XivHud.Protocol.csproj" />
     <Compile Include="../../../shared/IllustratedStyle.cs" Link="IllustratedStyle.cs" />
-  <Compile Include="../../../shared/IllustratedChrome.cs" Link="IllustratedChrome.cs" /></ItemGroup>
+  <Compile Include="../../../shared/IllustratedChrome.cs" Link="IllustratedChrome.cs" /><Compile Include="../../../shared/WorkspaceLayout.cs" Link="WorkspaceLayout.cs" /></ItemGroup>
 </Project>

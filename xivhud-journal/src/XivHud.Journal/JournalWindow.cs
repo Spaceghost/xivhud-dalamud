@@ -1,4 +1,6 @@
 using System.Numerics;
+using XivHud.Protocol;
+using XivHud.Style;
 using System.Diagnostics;
 using XivHud.Windowing;
 using XivHud.Windowing.Dalamud;
@@ -15,6 +17,9 @@ namespace XivHud.Journal;
 
 internal sealed class JournalWindow : IDisposable
 {
+    private readonly WorkspaceLayout workspace = new();
+    internal ScreenLayout? Layout => workspace.Current;
+    internal void SetScreenLayout(ScreenLayout rect) => workspace.Queue(rect);
     internal const string WindowName = "Adventurer's Journal###XivHud.Journal";
     private readonly WindowHostRouter windowHost;
     private readonly NativeGameWindowHost nativeHost;
@@ -31,7 +36,7 @@ internal sealed class JournalWindow : IDisposable
     internal bool IsOpen { get; private set; }
     internal object IpcState => new
     {
-        open = IsOpen, requestedMode = config.NativeWindowEnabled ? "native_frame" : config.WindowHostEnabled ? "world" : "screen",
+        layout = Layout, open = IsOpen, requestedMode = config.NativeWindowEnabled ? "native_frame" : config.WindowHostEnabled ? "world" : "screen",
         actualMode = nativeHost.IsActive ? "native_frame" : windowHost.IsHosted ? "world" : "screen",
         placement = config.WindowHostPlacement, hostingStatus = HostingStatus, focused = IsControllerFocused,
         controller = ControllerStatus, settingsOpen = settingsRequested,
@@ -178,6 +183,7 @@ internal sealed class JournalWindow : IDisposable
         ImGui.PushStyleColor(ImGuiCol.SliderGrab, V(Gold));
         try
         {
+            if (!config.NativeWindowEnabled && !config.WindowHostEnabled) workspace.ApplyNext();
             nativeHost.ApplyNextWindowLayout();
             var flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoMove;
             if (nativeHost.IsActive && !nativeHost.AllowInput) flags |= ImGuiWindowFlags.NoMouseInputs;
@@ -204,6 +210,7 @@ internal sealed class JournalWindow : IDisposable
                 using var bodyFont = body.Push();
                 ImGui.SetWindowFontScale(s / globalScale);
                 var p = ImGui.GetWindowPos(); var size = ImGui.GetWindowSize(); var d = ImGui.GetWindowDrawList();
+                if (!config.NativeWindowEnabled && !config.WindowHostEnabled) workspace.Observe();
                 Frame(d, p, size, s, config.Ornament);
                 if (IsControllerFocused && controller.IsAvailable)
                     d.AddRect(p + new Vector2(6 * s), p + size - new Vector2(6 * s), Aether, 7 * s, ImDrawFlags.None, 2 * s);
