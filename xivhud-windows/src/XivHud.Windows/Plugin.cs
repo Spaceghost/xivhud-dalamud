@@ -15,7 +15,7 @@ using static XivHud.Style.IllustratedStyle;
 namespace XivHud.Windows;
 
 /// <summary>Owns presentation resources, never a terminal, process or content lifetime.</summary>
-public sealed unsafe class Plugin : IDalamudPlugin
+public sealed unsafe class Plugin : IAsyncDalamudPlugin
 {
     private sealed class Panel(int id, string name, Vector3 anchor, uint zone)
     {
@@ -24,9 +24,11 @@ public sealed unsafe class Plugin : IDalamudPlugin
         public readonly uint Zone = zone;
         public Vector3 Anchor = anchor;
         public string Placement = "pet";
-        public float Width = 2.4f;
+        public float Width = 1.2f;
+        public readonly Dictionary<uint, bool> MouseFlags = [];
         public IDrawListTextureWrap? Texture;
-        public Vector2 Position, Size;
+        public Vector2 Position, Size, OriginalPosition, OriginalSize;
+        public bool SavedLayout;
         public PanelQuad Quad;
         public bool Visible, Captured, MouseDisabled;
         public ImGuiWindowFlags OriginalFlags;
@@ -35,6 +37,7 @@ public sealed unsafe class Plugin : IDalamudPlugin
     private readonly IDalamudPluginInterface pi;
     private readonly ICommandManager commands;
     private readonly IClientState client;
+    private readonly IFramework framework;
     private readonly IObjectTable objects;
     private readonly ICondition condition;
     private readonly IGameGui game;
@@ -64,10 +67,10 @@ public sealed unsafe class Plugin : IDalamudPlugin
         && !condition[ConditionFlag.OccupiedInCutSceneEvent] && !condition[ConditionFlag.OccupiedInQuestEvent];
 
     public Plugin(IDalamudPluginInterface pi, ICommandManager commands, IClientState client, IObjectTable objects,
-        ICondition condition, IGameGui game, ITextureProvider textures, IPluginLog log)
+        ICondition condition, IGameGui game, ITextureProvider textures, IPluginLog log, IFramework framework)
     {
         this.pi = pi; this.commands = commands; this.client = client; this.objects = objects;
-        this.condition = condition; this.game = game; this.textures = textures; this.log = log;
+        this.framework = framework; this.condition = condition; this.game = game; this.textures = textures; this.log = log;
         renderHook = Render; inputHook = Input;
         call = pi.GetIpcProvider<string, string>("XivHud.Windows.v1.Call");
         post = pi.GetIpcProvider<string, object>("XivHud.Windows.v1.Post");
@@ -95,7 +98,7 @@ public sealed unsafe class Plugin : IDalamudPlugin
             pi.UiBuilder.Draw += Draw; pi.UiBuilder.OpenMainUi += Open; pi.UiBuilder.OpenConfigUi += Open;
             client.Logout += Logout;
         }
-        catch { Dispose(); throw; }
+        catch { if (framework.IsInFrameworkUpdateThread) DisposeCore(); else framework.RunOnFrameworkThread(DisposeCore).GetAwaiter().GetResult(); throw; }
     }
     private void Open() => Enqueue("window.open");
     private void Logout(int a, int b) => Enqueue("release.all");
@@ -174,7 +177,7 @@ public sealed unsafe class Plugin : IDalamudPlugin
                         if (panels.Any(i => WindowIdentity.Key(i.Name) == WindowIdentity.Key(op.Name))) break;
                         if (panels.Count >= 16) throw new InvalidOperationException("Maximum 16 floating windows");
                         if (GhosttyOwns(op.Name)) throw new InvalidOperationException("Return this window from Ghostty first");
-                        panels.Add(new(++serial, op.Name, player.Position + new Vector3(0, 1.5f, 0), client.TerritoryType));
+                        panels.Add(new(++serial, op.Name, player.Position + new Vector3(0, .6f, 0), client.TerritoryType));
                         break;
                     case "panel.place": case "window.focus":
                         var panel = panels.SingleOrDefault(i => i.Id == op.PanelId) ?? throw new InvalidOperationException("Window is no longer hosted");
@@ -184,7 +187,7 @@ public sealed unsafe class Plugin : IDalamudPlugin
                             if (root.IsNull) throw new InvalidOperationException("Source window is not drawn yet");
                             ImGuiP.FocusWindow(root); focused = panel.Id;
                         }
-                        else { panel.Placement = op.Placement; if (objects.LocalPlayer is { } local) panel.Anchor = local.Position + new Vector3(0, 1.5f, 0); }
+                        else { panel.Placement = op.Placement; if (objects.LocalPlayer is { } local) panel.Anchor = local.Position + new Vector3(0, .6f, 0); }
                         break;
                 }
                 results[op.Id] = new { request = op.Id, ok = true };
@@ -236,18 +239,19 @@ public sealed unsafe class Plugin : IDalamudPlugin
         var height = item.Width * item.Size.Y / item.Size.X;
         if (item.Placement == "hud")
         {
-            var size = new Vector2(Math.Min(viewport.Size.X * .7f, item.Size.X), Math.Min(viewport.Size.Y * .7f, item.Size.Y));
+            var size = WindowLayout.Fit(item.Size, viewport.Size * .7f);
             var a = viewport.Pos + (viewport.Size - size) / 2;
             item.Quad = new(a, a + new Vector2(size.X, 0), a + size, a + new Vector2(0, size.Y)); return true;
         }
         if (objects.LocalPlayer is not { } player) return false;
-        var center = item.Placement == "pet" ? player.Position + new Vector3(1.5f + (item.Id - 1) % 3 * .7f, 1.8f, 0) : item.Anchor;
+        var center = item.Placement == "pet" ? player.Position + new Vector3(0, .6f, 0) : item.Anchor;
         var horizontal = Vector3.UnitX;
         if (game.WorldToScreen(center, out var middle, out _) && game.WorldToScreen(center + Vector3.UnitX, out var x, out _) && game.WorldToScreen(center + Vector3.UnitZ, out var z, out _))
         {
             var axis = new Vector3(x.X - middle.X, 0, z.X - middle.X);
             if (axis.LengthSquared() > .001f) horizontal = Vector3.Normalize(axis);
         }
+        if (item.Placement == "pet") center += horizontal * (.7f + (item.Id - 1) % 3 * .35f);
         var right = horizontal * item.Width / 2;
         var up = item.Placement == "ground" ? new Vector3(-right.Z, 0, right.X) * height / item.Width : new Vector3(0, height / 2, 0);
         if (item.Placement == "ground") center.Y = player.Position.Y + .05f;
@@ -272,6 +276,7 @@ public sealed unsafe class Plugin : IDalamudPlugin
             {
                 var root = ImGuiP.FindWindowByName(item.Name);
                 if (root.IsNull) { item.Captured = false; continue; }
+                if (!item.SavedLayout) { item.OriginalPosition = root.Pos; item.OriginalSize = root.Size; item.SavedLayout = true; }
                 if (!item.MouseDisabled) { item.OriginalFlags = root.Flags; item.MouseDisabled = true; }
                 if (!root.Active || root.Hidden || !Allowed) { item.Captured = false; root.Flags |= ImGuiWindowFlags.NoMouseInputs; continue; }
                 item.Position = root.Pos; item.Size = root.Size;
@@ -286,7 +291,8 @@ public sealed unsafe class Plugin : IDalamudPlugin
                 });
                 item.Captured = captured;
                 item.Status = captured ? "Floating · no terminal" : "Waiting for content";
-                root.Flags |= ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoMove;
+                VisitOwned(item, w => { item.MouseFlags.TryAdd(w.ID, (w.Flags & ImGuiWindowFlags.NoMouseInputs) != 0); w.Flags |= ImGuiWindowFlags.NoMouseInputs; });
+                root.Flags |= ImGuiWindowFlags.NoMove;
             }
             catch (Exception e) { item.Captured = false; item.Status = "Screen fallback · " + e.Message; RestoreFlags(item); }
         }
@@ -299,6 +305,16 @@ public sealed unsafe class Plugin : IDalamudPlugin
             if (context.IsNull || ctx != context.Handle) return;
             var c = new ImGuiContextPtr(ctx); var io = ImGui.GetIO();
             if (c.InputEventsQueue.Size is < 0 or > 4096) return;
+            foreach (var panel in panels)
+            {
+                if (!panel.SavedLayout) continue;
+                var source = ImGuiP.FindWindowByName(panel.Name);
+                if (source.IsNull) continue;
+                var viewport = ImGui.GetMainViewport();
+                var pinned = WindowLayout.Recover(panel.OriginalPosition, source.Size, viewport.Pos, viewport.Size);
+                ImGuiP.SetWindowPos(source, pinned, ImGuiCond.Always);
+                source.Flags |= ImGuiWindowFlags.NoMove;
+            }
             if (!remapped) realMouse = io.MousePos;
             for (var i = 0; i < c.InputEventsQueue.Size; i++)
                 if (c.InputEventsQueue[i].Type == ImGuiInputEventType.MousePos)
@@ -314,7 +330,7 @@ public sealed unsafe class Plugin : IDalamudPlugin
                     { c.InputEventsQueue.Data[i].Union.MousePos.PosX = target.X; c.InputEventsQueue.Data[i].Union.MousePos.PosY = target.Y; changed = true; }
                 if (!changed) io.AddMousePosEvent(target.X, target.Y);
                 var root = ImGuiP.FindWindowByName(hit.Name);
-                if (!root.IsNull) root.Flags &= ~ImGuiWindowFlags.NoMouseInputs;
+                RestoreInput(hit);
                 var clicked = false;
                 for (var i = 0; i < c.InputEventsQueue.Size; i++)
                     if (c.InputEventsQueue[i].Type == ImGuiInputEventType.MouseButton && c.InputEventsQueue[i].Union.MouseButton.Down != 0) clicked = true;
@@ -325,7 +341,7 @@ public sealed unsafe class Plugin : IDalamudPlugin
             {
                 if (remapped) io.AddMousePosEvent(realMouse.X, realMouse.Y);
                 remapped = false;
-                foreach (var item in panels) { var root = ImGuiP.FindWindowByName(item.Name); if (!root.IsNull && item.Captured) root.Flags |= ImGuiWindowFlags.NoMouseInputs; }
+                foreach (var item in panels) if (item.Captured) VisitOwned(item, w => w.Flags |= ImGuiWindowFlags.NoMouseInputs);
             }
         }
         catch (Exception e) { remapped = false; log.Warning(e, "Floating pointer mapping stopped"); }
@@ -378,8 +394,26 @@ public sealed unsafe class Plugin : IDalamudPlugin
         }
         finally { ImGui.End(); }
     }
-    private static void RestoreFlags(Panel item)
+    private void VisitOwned(Panel item, Action<ImGuiWindowPtr> action)
     {
+        if (context.IsNull || context.Windows.Size is < 0 or > 4096) return;
+        var root = ImGuiP.FindWindowByName(item.Name);
+        if (root.IsNull) return;
+        for (var i = 0; i < context.Windows.Size; i++)
+        {
+            var window = context.Windows[i];
+            if (!window.IsNull && (window == root || window.RootWindow == root || window.RootWindowPopupTree == root)) action(window);
+        }
+    }
+    private void RestoreInput(Panel item) => VisitOwned(item, window =>
+    {
+        if (!item.MouseFlags.TryGetValue(window.ID, out var disabled)) return;
+        if (disabled) window.Flags |= ImGuiWindowFlags.NoMouseInputs;
+        else window.Flags &= ~ImGuiWindowFlags.NoMouseInputs;
+    });
+    private void RestoreFlags(Panel item)
+    {
+        RestoreInput(item);
         var root = ImGuiP.FindWindowByName(item.Name);
         if (!root.IsNull && item.MouseDisabled && (item.OriginalFlags & ImGuiWindowFlags.NoMouseInputs) == 0) root.Flags &= ~ImGuiWindowFlags.NoMouseInputs;
         if (!root.IsNull && item.MouseDisabled && (item.OriginalFlags & ImGuiWindowFlags.NoMove) == 0) root.Flags &= ~ImGuiWindowFlags.NoMove;
@@ -387,10 +421,25 @@ public sealed unsafe class Plugin : IDalamudPlugin
     }
     private void Release(Panel item)
     {
-        RestoreFlags(item); item.Texture?.Dispose(); item.Texture = null; panels.Remove(item);
+        RestoreFlags(item);
+        var root = ImGuiP.FindWindowByName(item.Name);
+        if (!root.IsNull && item.SavedLayout)
+        {
+            var viewport = ImGui.GetMainViewport();
+            ImGuiP.SetWindowPos(root, WindowLayout.Recover(item.OriginalPosition, item.OriginalSize, viewport.Pos, viewport.Size), ImGuiCond.Always);
+            ImGuiP.SetWindowSize(root, item.OriginalSize, ImGuiCond.Always);
+        }
+        item.Texture?.Dispose(); item.Texture = null; panels.Remove(item);
         if (focused == item.Id) focused = 0;
     }
-    public void Dispose()
+    public Task LoadAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    public ValueTask DisposeAsync()
+    {
+        if (framework.IsInFrameworkUpdateThread) { DisposeCore(); return ValueTask.CompletedTask; }
+        return new ValueTask(framework.RunOnFrameworkThread(DisposeCore));
+    }
+    private void DisposeCore()
     {
         if (disposed) return; disposed = true;
         pi.UiBuilder.Draw -= Draw; pi.UiBuilder.OpenMainUi -= Open; pi.UiBuilder.OpenConfigUi -= Open; client.Logout -= Logout;

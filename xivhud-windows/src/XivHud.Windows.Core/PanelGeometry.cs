@@ -33,3 +33,20 @@ public static class WindowIdentity
     public static string Key(string name) => name.Contains("###", StringComparison.Ordinal) ? name[(name.IndexOf("###", StringComparison.Ordinal) + 3)..] : name;
     public static readonly string[] Placements = ["pet", "hud", "here", "ground"];
 }
+
+public static class WindowLayout
+{
+    public static Vector2 Fit(Vector2 size, Vector2 available)
+    {
+        var scale = Math.Min(1, Math.Min(available.X / Math.Max(1, size.X), available.Y / Math.Max(1, size.Y)));
+        return size * Math.Max(0, scale);
+    }
+
+    /// <summary>Keep a recoverable source origin in the current viewport, including oversized windows.</summary>
+    public static Vector2 Recover(Vector2 position, Vector2 size, Vector2 viewportPosition, Vector2 viewportSize)
+    {
+        if (!float.IsFinite(position.X) || !float.IsFinite(position.Y) || !float.IsFinite(size.X) || !float.IsFinite(size.Y)
+            || !float.IsFinite(viewportSize.X) || !float.IsFinite(viewportSize.Y)) return viewportPosition;
+        return Vector2.Clamp(position, viewportPosition, viewportPosition + Vector2.Max(Vector2.Zero, viewportSize - size));
+    }
+}

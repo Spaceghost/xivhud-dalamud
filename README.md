@@ -48,7 +48,7 @@ CI runs builds and all eleven offline suites against the reviewed references and
 - `/xivcharacter` opens Character; `/xivcharacter native` opens the original; `/xivcharacter screen` recovers its screen window.
 - `/xivvitals settings` opens Vitals appearance; `preview` shows sample panels; `open` enables live panels; `close` hides them; `lock` enables click-through.
 - Journal Appearance configures the compact tracker; `/xivjournal tracker` enables it and `tracker off` hides it.
-- Journal and Character can choose screen, native frame, or optional Ghostty world hosting. Requested mode and actual presentation are separate diagnostics.
+- Journal and Character can choose screen, native frame, or independent floating hosting, with an explicit Ghostty option. Requested mode and actual presentation are separate diagnostics.
 
 Full module documentation: [HUD](xivhud-dalamud/README.md), [Journal](xivhud-journal/README.md), [Character](xivhud-character/README.md), [Vitals](xivhud-vitals/README.md), [Windowing](xivhud-windowing/README.md). Their earlier verification records describe those checks, not acceptance of this publication build.
 
@@ -56,7 +56,9 @@ Full module documentation: [HUD](xivhud-dalamud/README.md), [Journal](xivhud-jou
 
 [XivMcp](https://github.com/Spaceghost/xivmcp-dalamud) discovers the modules independently, reads immutable snapshots and capabilities, and exposes explicitly approved UI controls. Reads never open a window or acquire controller input. UI requests are queued for the framework thread; poll their result and then inspect actual window state. The remote Character page control never equips gear. See [IPC contract](docs/IPC.md).
 
-The publication builds and IPC contract have offline validation. The FFXIV container was stopped during publication; this build has no new in-game smoke test or screenshots. Character remains manual-only until native adoption, data accuracy, controller navigation, and all host/fallback modes are checked live.
+All 544 tests across eleven offline suites pass. The nine modules and eight optional Umbra adapters also loaded in game. Standalone Journal hosting and popups, Inventory clicks and beside-character placement, screen recovery, and Crafting worklists were checked live. See the [acceptance record and screenshots](docs/WORLD-WINDOWS-ACCEPTANCE.md) for evidence and remaining limits. Character remains a development build pending its broader native, data and physical-controller acceptance.
+
+![Inventory beside the character, hosted without a terminal](docs/screenshots/inventory-companion.png)
 
 ## License
 

@@ -9,7 +9,7 @@ Open `/xivwindows`, choose an open source window and select **Float selected**.
 Choose **Beside me**, **View**, **Here** or **Ground**. **Screen** restores one
 source. `/xivwindows screen` recovers every source. Explicit adoption and release
 also accept an exact window name after `/xivwindows adopt ` or `release `.
-Closing or unloading this host restores ordinary source rendering. No adoption
+Closing or unloading this host restores ordinary source rendering and a visible source position. No adoption
 is automatic, and no window placements are persisted in this first version.
 
 Capture runs at ImGui RenderPre, after all plugins have drawn. It includes the
@@ -21,8 +21,10 @@ windows do not keep displaying an old image. Logout releases all sources; zone
 changes release Here/Ground placements. The sixteen-source limit bounds GPU
 resources. Source sizes above 4096 pixels are refused.
 
+Unload awaits framework-thread cleanup of the ImGui hooks and GPU textures.
+
 NewFramePre remaps queued mouse positions into the source rectangle, preserving
-normal clicks, scroll and text input. Ordinary screen windows take precedence.
+normal clicks, scroll and text input. Source positions stay within the viewport during capture, so a title-bar drag cannot strand their contents outside it. Ordinary screen windows take precedence.
 Pointer hover alone never changes keyboard/controller focus; explicit focus or
 a click does. Source windows that were already mouse-disabled remain passive.
 The host does not enable global ImGui controller navigation, move the character,

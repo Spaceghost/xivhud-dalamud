@@ -3,6 +3,25 @@ using XivHud.Windows.Core;
 namespace XivHud.Windows.Tests;
 public class PanelGeometryTests
 {
+    [Fact] public void ViewPlacementKeepsTheSourceAspectRatio()
+    {
+        var fitted = WindowLayout.Fit(new(1371,889), new(1344,756));
+        Assert.Equal(756, fitted.Y, .01);
+        Assert.InRange(Math.Abs(fitted.X / fitted.Y - 1371f / 889), 0, .001);
+        Assert.Equal(new Vector2(400,300), WindowLayout.Fit(new(400,300), new(1344,756)));
+    }
+    [Fact] public void RecoveryBringsAnOffscreenSourceBackIntoView()
+    { Assert.Equal(Vector2.Zero, WindowLayout.Recover(new(-460, -160), new(760,520), Vector2.Zero, new(1920,1080))); }
+    [Fact] public void RecoveryPreservesValidPositionAndHandlesAnotherViewport()
+    {
+        Assert.Equal(new Vector2(200,300), WindowLayout.Recover(new(200,300), new(760,520), Vector2.Zero, new(1920,1080)));
+        Assert.Equal(new Vector2(1920,560), WindowLayout.Recover(new(1800,900), new(760,520), new(1920,0), new(1920,1080)));
+    }
+    [Fact] public void OversizedAndNonFiniteSourcesRetainAVisibleOrigin()
+    {
+        Assert.Equal(Vector2.Zero, WindowLayout.Recover(new(100), new(4096), Vector2.Zero, new(1920,1080)));
+        Assert.Equal(Vector2.Zero, WindowLayout.Recover(new(float.NaN), new(760,520), Vector2.Zero, new(1920,1080)));
+    }
     [Fact] public void ProjectedQuadMapsBothTrianglesAndRejectsOutside()
     {
         var q = new PanelQuad(new(100, 100), new(500, 140), new(450, 400), new(150, 440));
