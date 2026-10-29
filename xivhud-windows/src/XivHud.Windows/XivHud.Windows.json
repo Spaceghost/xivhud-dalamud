@@ -2,7 +2,7 @@
   "Author": "Johnneylee Jack Rollins",
   "Name": "XivHud \u00b7 Floating Windows",
   "InternalName": "XivHud.Windows",
-  "AssemblyVersion": "0.1.0.0",
+  "AssemblyVersion": "0.1.0.1",
   "Punchline": "Float plugin windows without a terminal.",
   "Description": "Independent floating-window host for explicitly selected ImGui windows. Screen, companion, world and ground presentation, with ordinary screen recovery. Ghostty remains optional for terminal and remote windows.",
   "ApplicableVersion": "any",

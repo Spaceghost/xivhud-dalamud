@@ -78,6 +78,13 @@ public sealed unsafe class Plugin : IDalamudPlugin
                 if (args.Trim() == "screen") Enqueue("release.all");
                 else if (args.StartsWith("adopt ", StringComparison.Ordinal)) Enqueue("adopt", args[6..]);
                 else if (args.StartsWith("release ", StringComparison.Ordinal)) Enqueue("release", args[8..]);
+                else if (args.Trim() == "status") Enqueue("status");
+                else if (args.StartsWith("place ", StringComparison.Ordinal))
+                {
+                    var parts = args.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length == 3 && int.TryParse(parts[1], out var id) && WindowIdentity.Placements.Contains(parts[2]))
+                        Enqueue("panel.place", id: id, placement: parts[2]);
+                }
                 else Enqueue("window.open");
             }) { HelpMessage = "Floating windows: open manager, adopt FULL###IDENTITY, release FULL###IDENTITY, screen (recover all). No terminal required." });
             if (!registered) throw new InvalidOperationException("/xivwindows is already registered");
@@ -157,6 +164,7 @@ public sealed unsafe class Plugin : IDalamudPlugin
                 {
                     case "window.open": case "window.settings": open = true; break;
                     case "window.toggle": open = !open; break;
+                    case "status": log.Information("Floating window state: {Snapshot}; panels: {Panels}", snapshot, panelSnapshot); break;
                     case "window.close": open = false; break;
                     case "release.all": foreach (var item in panels.ToArray()) Release(item); break;
                     case "release": foreach (var item in panels.Where(i => i.Name == op.Name).ToArray()) Release(item); break;
@@ -255,7 +263,7 @@ public sealed unsafe class Plugin : IDalamudPlugin
     }
     private void Render(ImGuiContext* ctx, ImGuiContextHook* hook)
     {
-        if (disposed) return;
+        if (disposed || context.IsNull || ctx != context.Handle) return;
         foreach (var item in panels)
         {
             try
@@ -287,7 +295,9 @@ public sealed unsafe class Plugin : IDalamudPlugin
         if (disposed) return;
         try
         {
+            if (context.IsNull || ctx != context.Handle) return;
             var c = new ImGuiContextPtr(ctx); var io = ImGui.GetIO();
+            if (c.InputEventsQueue.Size is < 0 or > 4096) return;
             if (!remapped) realMouse = io.MousePos;
             for (var i = 0; i < c.InputEventsQueue.Size; i++)
                 if (c.InputEventsQueue[i].Type == ImGuiInputEventType.MousePos)
@@ -321,6 +331,7 @@ public sealed unsafe class Plugin : IDalamudPlugin
     }
     private bool ScreenCovers(Vector2 point)
     {
+        if (context.Windows.Size is < 0 or > 4096) return true;
         for (var i = context.Windows.Size - 1; i >= 0; i--)
         {
             var w = context.Windows[i];
