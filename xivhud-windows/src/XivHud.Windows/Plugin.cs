@@ -280,7 +280,7 @@ public sealed unsafe class Plugin : IAsyncDalamudPlugin
                 if (!item.MouseDisabled) { item.OriginalFlags = root.Flags; item.MouseDisabled = true; }
                 if (!root.Active || root.Hidden || !Allowed) { item.Captured = false; root.Flags |= ImGuiWindowFlags.NoMouseInputs; continue; }
                 item.Position = root.Pos; item.Size = root.Size;
-                if (!item.Visible || !item.Quad.Valid) { RestoreFlags(item); continue; }
+                if (!item.Visible || !item.Quad.Valid) { item.Captured = false; item.Status = "Screen fallback · placement unavailable"; RestoreFlags(item); continue; }
                 var captured = NativeWindowCapture.DrawExpanded(item.Name, frame =>
                 {
                     item.Position = frame.Data->DisplayPos; item.Size = frame.Data->DisplaySize;
