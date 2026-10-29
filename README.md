@@ -68,3 +68,9 @@ to `testing`; poll `get_plugin_setup_status` with the returned id. MCP registers
 the repository, configures testing, installs the bundled libraries, enables the
 plugins and verifies loaded versions. Source builds and game acceptance remain
 separate concerns. The normal testing catalogue still excludes development modules.
+
+## Shared mod workspace
+
+`/xivnav` opens the searchable mod shell for HUD modules, other installed mods
+and Ghostty world panels. It supports keyboard/controller selection and explicit
+focus, recovery and placement actions. See the [complete UI rewrite roadmap](docs/UI_REWRITE.md).

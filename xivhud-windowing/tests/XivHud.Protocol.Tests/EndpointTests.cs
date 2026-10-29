@@ -18,6 +18,18 @@ public class EndpointTests
     }
 
     [Fact]
+    public void NavigatorOpenIsQueuedWithoutChangingHudVisibility()
+    {
+        using var endpoint = new HudEndpoint("hud");
+        endpoint.Publish(new { enabled = false, navigatorOpen = false });
+        var reply = Reply(endpoint, Request("navigator.open"));
+        Assert.True(reply.GetProperty("result").GetProperty("accepted").GetBoolean());
+        Assert.False(Reply(endpoint, Request("status")).GetProperty("result").GetProperty("state").GetProperty("enabled").GetBoolean());
+        var methods = new List<string>(); endpoint.Process(c => { methods.Add(c.Method); return null; });
+        Assert.Equal(new[] { "navigator.open" }, methods);
+    }
+
+    [Fact]
     public void VitalsSupportsOnlyItsScreenControlsAndQueuesThemForTheOwner()
     {
         using var endpoint = new HudEndpoint("vitals");

@@ -21,6 +21,8 @@ public sealed class Plugin : IDalamudPlugin
     private readonly IPluginLog log;
     private readonly Configuration config;
     private readonly HudVisibility visibility;
+    private readonly NavigatorWindow navigator;
+    private bool navigatorCommandRegistered;
     private readonly ControllerBroker controller = null!;
     private readonly ConcurrentQueue<int> requests = new();
     private readonly HudEndpoint ipc = new("hud");
@@ -40,20 +42,25 @@ public sealed class Plugin : IDalamudPlugin
         this.client = client; this.chat = chat; this.log = log;
         config = pi.GetPluginConfig() as Configuration ?? new();
         visibility = new(log);
+        navigator = new(pi);
         try
         {
             controller = new(pi, interop, gamepad, client, condition, log);
+            navigator.ConfigureController(controller, () => config.SwapConfirmCancel);
             call = pi.GetIpcProvider<string, string>("XivHud.v1.Call");
             call.RegisterFunc(ipc.Call);
             PublishStatus();
             commandRegistered = commands.AddHandler(Command, new CommandInfo(OnCommand)
-                { HelpMessage = "Umbra HUD settings. /xivhud on hides the native HUD; off restores it; toggle switches; status reports the mode." });
+                { HelpMessage = "HUD settings. /xivhud workspace opens the mod navigator; on hides the native HUD; off restores it; toggle switches; status reports the mode." });
             if (!commandRegistered) throw new InvalidOperationException("The /xivhud command is already registered.");
+            navigatorCommandRegistered = commands.AddHandler("/xivnav", new CommandInfo((_, _) => navigator.Open())
+                { HelpMessage = "Find and open mod surfaces, nested workspace tabs and world panels." });
+            if (!navigatorCommandRegistered) throw new InvalidOperationException("The /xivnav command is already registered.");
             entry = dtr.Get("XivHud");
-            entry.OnClick = e => { if (e.ClickType == MouseClickType.Right) open = true; else requests.Enqueue(2); };
+            entry.OnClick = e => { if (e.ClickType == MouseClickType.Right) navigator.Open(); else requests.Enqueue(2); };
             pi.UiBuilder.DisableUserUiHide = true;
             pi.UiBuilder.Draw += Draw;
-            pi.UiBuilder.OpenMainUi += Open;
+            pi.UiBuilder.OpenMainUi += navigator.Open;
             pi.UiBuilder.OpenConfigUi += Open;
             framework.Update += Update;
             client.Logout += OnLogout;
@@ -69,6 +76,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         switch (arguments.Trim().ToLowerInvariant())
         {
+            case "navigate": case "workspace": navigator.Open(); break;
             case "on": requests.Enqueue(1); break;
             case "off": case "restore": requests.Enqueue(0); break;
             case "toggle": requests.Enqueue(2); break;
@@ -85,8 +93,10 @@ public sealed class Plugin : IDalamudPlugin
             switch (command.Method)
             {
                 case "hud.set_enabled": requests.Enqueue(command.Parameters.GetProperty("enabled").GetBoolean() ? 1 : 0); break;
+                case "navigator.open": navigator.Open(); break;
+                case "navigator.close": navigator.Close(); break;
                 case "window.settings": open = true; break;
-                case "window.close": open = false; ReleaseController(); break;
+                case "window.close": open = false; navigator.Close(); ReleaseController(); break;
                 default: return "unsupported_method";
             }
             return null;
@@ -112,7 +122,7 @@ public sealed class Plugin : IDalamudPlugin
             lastEntry = text;
             entry.Text = text;
             entry.Tooltip = (config.Enabled ? "Click to restore the game HUD." : "Click to hide the native HUD and keep Umbra.")
-                + "\nRight-click for HUD settings.";
+                + "\nRight-click for the mod workspace.";
             entry.Shown = true;
         }
         PublishStatus();
@@ -123,11 +133,12 @@ public sealed class Plugin : IDalamudPlugin
     {
         if (disposed || Environment.TickCount64 < nextIpcPublish) return;
         nextIpcPublish = Environment.TickCount64 + 200;
-        ipc.Publish(new { ready = !disposed, loggedIn = client.IsLoggedIn, enabled = config.Enabled, applied = visibility.IsApplied, status = visibility.Status, settingsOpen = open, controller = controller?.Status, recoveryCommand = "/xivhud off" });
+        ipc.Publish(new { ready = !disposed, loggedIn = client.IsLoggedIn, enabled = config.Enabled, applied = visibility.IsApplied, status = visibility.Status, settingsOpen = open, navigatorOpen = navigator.IsOpen, navigatorCommand = "/xivnav", controller = controller?.Status, recoveryCommand = "/xivhud off" });
     }
 
     private void Draw()
     {
+        if (!disposed) navigator.Draw();
         if (!open || disposed) { ReleaseController(); return; }
         var shown = open;
         ImGui.SetNextWindowSize(new(390, 0), ImGuiCond.FirstUseEver);
@@ -157,6 +168,7 @@ public sealed class Plugin : IDalamudPlugin
                 }
                 else if ((input.Pressed & (uint)confirm) != 0) requests.Enqueue(config.Enabled ? 0 : 1);
             }
+            if (ImGui.Button("Open mod workspace")) navigator.Open();
             ImGui.TextUnformatted("A clearer view of the world");
             ImGui.Separator();
             ImGui.TextWrapped(visibility.Status);
@@ -202,9 +214,11 @@ public sealed class Plugin : IDalamudPlugin
         framework.Update -= Update;
         client.Logout -= OnLogout;
         pi.UiBuilder.Draw -= Draw;
-        pi.UiBuilder.OpenMainUi -= Open;
+        pi.UiBuilder.OpenMainUi -= navigator.Open;
         pi.UiBuilder.OpenConfigUi -= Open;
         if (commandRegistered) commands.RemoveHandler(Command);
+        if (navigatorCommandRegistered) commands.RemoveHandler("/xivnav");
+        navigator.Close();
         entry?.Remove(); entry = null;
         ReleaseController();
         controller?.Dispose();

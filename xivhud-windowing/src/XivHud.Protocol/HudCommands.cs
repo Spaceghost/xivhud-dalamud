@@ -14,7 +14,7 @@ public static class HudCommands
 
     public static string[] Methods(string module) => module switch
     {
-        "hud" => ["hud.set_enabled", "window.settings", "window.close"],
+        "hud" => ["hud.set_enabled", "window.settings", "window.close", "navigator.open", "navigator.close"],
         "journal" => ["window.open", "window.close", "window.settings", "window.mode", "window.original", "journal.select", "journal.bookmark", "journal.show_map", "journal.tracker"],
         "character" => ["window.open", "window.close", "window.settings", "window.mode", "window.original", "character.page"],
         "vitals" => ["window.open", "window.close", "window.settings"],
