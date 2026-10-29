@@ -36,7 +36,11 @@ internal sealed class CombatWindow(IllustratedChrome chrome, Configuration confi
         try
         {
             if (!drew) return;
-            var d = ImGui.GetWindowDrawList(); Frame(d, position, size, 1, config.Ornament);
+            position = ImGui.GetWindowPos(); size = ImGui.GetWindowSize();
+            var d = ImGui.GetWindowDrawList();
+            d.PushClipRect(position, position + size, false);
+            Frame(d, position, size, 1, config.Ornament);
+            d.PopClipRect();
             chrome.Title(position + new Vector2(8, 6), "Combat", "", Preview);
             ImGui.SetCursorScreenPos(position + new Vector2(size.X - 140, 28));
             if (ImGui.SmallButton("Appearance")) SettingsOpen = true;
@@ -104,7 +108,7 @@ internal sealed class CombatWindow(IllustratedChrome chrome, Configuration confi
             }
             ImGui.Separator();
             var resources = state.Gauge.Where(x => !x.Label.Contains("Timer", StringComparison.Ordinal)
-                && x.Value is not ("0" or "False" or "false" or "None" or "[]")).Take(4).ToArray();
+                && x.Value is not ("0" or "False" or "false" or "None" or "[]" or "Yes" or "No")).Take(4).ToArray();
             ImGui.TextColored(V(PaleGold), actor.Job + "  ·  Level " + actor.Level);
             if (resources.Length > 0)
                 ImGui.TextWrapped(string.Join("  ·  ", resources.Select(x => Regex.Replace(x.Label, "(?<=[a-z0-9])(?=[A-Z])", " ") + ": " + x.Value)));

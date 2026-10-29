@@ -20,8 +20,8 @@ Cooldown details are available for ordinary action appearances; other slot kinds
 retain their native execution and icon but may not provide a cooldown readout.
 Native availability, range, costs and action queueing remain the game's decision.
 
-Job-gauge values use Dalamud's public typed gauge properties. Counts/enums are
-shown directly; timers retain their native units. This is a generic resource
+Job-gauge values use Dalamud's public typed gauge properties. Active counts/enums are shown with readable labels. Raw timers and boolean
+readiness fields stay out of the combat deck. This is a generic resource
 readout, not a bespoke graphic for every job. Player/target casts and effects use
 the existing Vitals data model. Party/focus frames remain available in Vitals.
 

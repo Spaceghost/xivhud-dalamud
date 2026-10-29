@@ -122,7 +122,7 @@ internal sealed class ChatWindow(IllustratedChrome chrome, Configuration config,
                     ImGui.Spacing(); ImGui.PopID();
                 }
                 ImGui.PopTextWrapPos();
-                if (rows.Count == 0) ImGui.TextDisabled("Messages appear here while chat capture is enabled. Native history remains in game.");
+                if (rows.Count == 0) ImGui.TextDisabled("No messages in this conversation yet.");
                 if (follow && search.Length == 0) ImGui.SetScrollHereY(1);
                 follow = ImGui.GetScrollY() >= ImGui.GetScrollMaxY() - 8;
                 if (follow && search.Length == 0 && ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows) && !Preview)

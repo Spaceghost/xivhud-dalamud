@@ -2,7 +2,7 @@
   "Author": "Johnneylee Jack Rollins",
   "Name": "XivHud \u00b7 Chat",
   "InternalName": "XivHud.Chat",
-  "AssemblyVersion": "0.1.0.2",
+  "AssemblyVersion": "0.1.0.3",
   "Punchline": "Conversations and notifications in the shared mod interface.",
   "Description": "Manual development chat and notification shell. In-memory channel history, unread counts, explicit chat composition and bounded notification cards. Native chat remains available.",
   "ApplicableVersion": "any",
