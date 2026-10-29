@@ -1,6 +1,6 @@
 # Independent floating-window acceptance
 
-The family builds against its reviewed Dalamud references. All 544 tests across
+The family builds against its reviewed Dalamud references. All 548 tests across
 11 offline suites passed on 2026-10-29. The eight optional Umbra adapters build
 against installed Umbra 3.1.18.0. Locked builds complete without warnings.
 
